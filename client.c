@@ -1,23 +1,63 @@
 #include <strophe.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "utils.h"
+#include "xmpp_register.h"
+
+void conn_handler(xmpp_conn_t *const conn,
+                  const xmpp_conn_event_t status,
+                  const int error,
+                  xmpp_stream_error_t *const stream_error,
+                  void *const userdata);
 
 int main(int argc, char **argv)
 {
-    char *jid, *pass;
+    char jid[64], pass[32];
+    char option;
+    long flags = 0;
 
-    // validate user input
-    if (argc < 3)
+    print_menu();
+    printf("Enter an option: ");
+    scanf("%s", &option);
+    getchar();
+
+    if (option == '1')
     {
-        printf("usage: ./client <user@host> <password>\n");
-        exit(1);
+        printf("enter full jid: ");
+        fgets(jid, 64, stdin);
+        jid[strlen(jid) - 1] = '\0';
+        printf("enter password: ");
+        fgets(pass, 32, stdin);
+        pass[strlen(pass) - 1] = '\0';
     }
-
-    // save user input
-    jid = argv[1];
-    pass = argv[2];
-
-    printf("Connecting *%s* with password *%s*\n", jid, pass);
+    else if (option == '2')
+    {
+        // char username[32];
+        // char name[64];
+        // char email[64];
+        // printf("enter username: ");
+        // fgets(username, sizeof(username), stdin);
+        // printf("enter password: ");
+        // fgets(pass, sizeof(pass), stdin);
+        // printf("enter your name: ");
+        // fgets(name, sizeof(name), stdin);
+        // printf("enter your email: ");
+        // fgets(email, sizeof(email), stdin);
+        // jid[strlen(jid) - 1] = '\0';
+        // pass[strlen(pass) - 1] = '\0';
+        // name[strlen(name) - 1] = '\0';
+        // name[strlen(email) - 1] = '\0';
+        xmpp_register("jid", "pass", "name");
+    }
+    else if (option == '3')
+    {
+        printf("remove account from server\n");
+    }
+    else
+    {
+        printf("wrong option\n");
+    }
 
     return 0;
 }
