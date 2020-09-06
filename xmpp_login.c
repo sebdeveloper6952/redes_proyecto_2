@@ -3,6 +3,42 @@
 #include <string.h>
 #include "xmpp_utils.h"
 
+// Get the user roster.
+int roster_result_handler(
+    xmpp_conn_t *const conn,
+    xmpp_stanza_t *const stanza,
+    void *const userdata)
+{
+    xmpp_stanza_t *query, *next;
+
+    query = xmpp_stanza_get_child_by_name(stanza, "query");
+    if (query)
+        next = xmpp_stanza_get_children(query);
+    while (next)
+    {
+        const char *roster_jid = xmpp_stanza_get_attribute(next, "jid");
+        if (roster_jid)
+            fprintf(stderr, "DEBUG: ROSTER has contact '%s'.\n", roster_jid);
+        next = xmpp_stanza_get_next(next);
+    }
+
+    return 1;
+}
+
+// Send IQ stanza to get the users roster.
+void get_roster(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+{
+    xmpp_stanza_t *iq, *query;
+    iq = xmpp_iq_new(ctx, "get", "get_roster");
+    query = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(query, "query");
+    xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);
+    xmpp_stanza_add_child(iq, query);
+    xmpp_stanza_release(query);
+    xmpp_send(conn, iq);
+    xmpp_stanza_release(iq);
+}
+
 int xmpp_subscription_handler(
     xmpp_conn_t *const conn,
     xmpp_stanza_t *const stanza,
@@ -26,10 +62,10 @@ int xmpp_subscription_handler(
         xmpp_stanza_release(subscribed);
     }
 
-    // return 'true' to keep the handler active.
     return 1;
 }
 
+// Use the search service to get all users.
 void get_all_users(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
 {
     const char *jid = xmpp_conn_get_bound_jid(conn);
@@ -40,7 +76,7 @@ void get_all_users(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
     xmpp_stanza_set_to(iq_search, "search.redes2020.xyz");
     xmpp_stanza_set_from(iq_search, jid);
     xmpp_stanza_set_name(query_search, "query");
-    xmpp_stanza_set_ns(query_search, "jabber:iq:search");
+    xmpp_stanza_set_ns(query_search, XMPP_NS_JABBER_SEARCH);
     xmpp_stanza_set_name(query_email, "email");
     xmpp_stanza_set_text(email_text, "*");
     xmpp_stanza_add_child(query_email, email_text);
@@ -149,11 +185,15 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // add handler for user search result
         xmpp_id_handler_add(conn, search_result_handler, "search_result", NULL);
 
+        // add handler for user roster result
+        xmpp_id_handler_add(conn, roster_result_handler, "get_roster", userdata);
+
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);
 
         // testing
-        get_all_users(conn, ctx);
+        // get_all_users(conn, ctx);
+        get_roster(conn, ctx);
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {

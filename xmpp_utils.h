@@ -2,6 +2,8 @@
 
 #ifndef XMPP_UTILS
 #define XMPP_UTILS
+#define XMPP_NS_JABBER_SEARCH "jabber:iq:search"
+
 typedef struct
 {
     xmpp_ctx_t *ctx;
