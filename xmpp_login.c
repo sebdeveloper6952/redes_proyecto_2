@@ -151,9 +151,18 @@ int service_discovery_handler(
 // Sends a <presence/> stanza to indicate we are available.
 void send_logged_in_presence(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
 {
-    xmpp_stanza_t *login = xmpp_presence_new(ctx);
-    xmpp_send(conn, login);
-    xmpp_stanza_release(login);
+    xmpp_stanza_t *presence, *status, *text;
+    presence = xmpp_presence_new(ctx);
+    status = xmpp_stanza_new(ctx);
+    text = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(status, "status");
+    xmpp_stanza_set_text(text, "Ola jeje");
+    xmpp_stanza_add_child(status, text);
+    xmpp_stanza_release(text);
+    xmpp_stanza_add_child(presence, status);
+    xmpp_stanza_release(status);
+    xmpp_send(conn, presence);
+    xmpp_stanza_release(presence);
 }
 
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
@@ -186,13 +195,13 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         xmpp_id_handler_add(conn, search_result_handler, "search_result", NULL);
 
         // add handler for user roster result
-        xmpp_id_handler_add(conn, roster_result_handler, "get_roster", userdata);
+        xmpp_id_handler_add(conn, roster_result_handler, "get_roster", NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);
 
         // testing
-        // get_all_users(conn, ctx);
+        get_all_users(conn, ctx);
         get_roster(conn, ctx);
     }
     else if (status == XMPP_CONN_DISCONNECT)
