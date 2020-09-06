@@ -3,18 +3,7 @@
 #include <string.h>
 #include <strophe.h>
 #include "xmpp_register.h"
-
-xmpp_reg_t *reg_new(void)
-{
-    xmpp_reg_t *reg;
-    reg = malloc(sizeof(*reg));
-    if (reg != NULL)
-    {
-        memset(reg, 0, sizeof(*reg));
-    }
-
-    return reg;
-}
+#include "xmpp_utils.h"
 
 void send_register_form(
     xmpp_reg_t *reg,
@@ -241,7 +230,8 @@ void xmpp_register()
     // initialize library
     xmpp_initialize();
     log = xmpp_get_default_logger(XMPP_LEVEL_DEBUG);
-    ctx = xmpp_ctx_new(NULL, log);
+    // ctx = xmpp_ctx_new(NULL, log);
+    ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
 
     // // register details

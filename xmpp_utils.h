@@ -10,6 +10,7 @@ typedef struct
     const char *jid;
 } xmpp_reg_t;
 
+xmpp_reg_t *xmpp_reg_new(void);
 void print_menu();
 void get_jid_and_pass(char *jid, char *pass);
 #endif

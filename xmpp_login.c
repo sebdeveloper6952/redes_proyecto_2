@@ -165,6 +165,38 @@ void send_logged_in_presence(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
     xmpp_stanza_release(presence);
 }
 
+int delete_account_handler(
+    xmpp_conn_t *const conn,
+    xmpp_stanza_t *const stanza,
+    void *const userdata)
+{
+    xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
+
+    fprintf(stderr, "DEBUG: account was deleted from server.\n");
+    xmpp_disconnect(conn);
+    xmpp_stop(ctx);
+
+    return 0;
+}
+
+void delete_account(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+{
+    xmpp_stanza_t *iq, *query, *remove;
+    iq = xmpp_iq_new(ctx, "set", "delete_account");
+    query = xmpp_stanza_new(ctx);
+    remove = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(remove, "remove");
+    xmpp_stanza_add_child(query, remove);
+    xmpp_stanza_release(remove);
+    xmpp_stanza_set_name(query, "query");
+    xmpp_stanza_set_ns(query, XMPP_NS_REGISTER);
+    xmpp_stanza_add_child(iq, query);
+    xmpp_stanza_release(query);
+    xmpp_id_handler_add(conn, delete_account_handler, "delete_account", ctx);
+    xmpp_send(conn, iq);
+    xmpp_stanza_release(iq);
+}
+
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         const xmpp_conn_event_t status,
                         const int error,
@@ -225,7 +257,8 @@ void xmpp_login(const char *jid, const char *pass)
     // initialize library
     xmpp_initialize();
     log = xmpp_get_default_logger(XMPP_LEVEL_DEBUG);
-    ctx = xmpp_ctx_new(NULL, log);
+    // ctx = xmpp_ctx_new(NULL, log);
+    ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
 
     // set flag to trus TLS cert
