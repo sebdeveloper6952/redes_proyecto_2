@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utils.h"
+#include "xmpp_utils.h"
 #include "xmpp_register.h"
+#include "xmpp_login.h"
 
 void conn_handler(xmpp_conn_t *const conn,
                   const xmpp_conn_event_t status,
@@ -24,31 +25,18 @@ int main(int argc, char **argv)
 
     if (option == '1')
     {
-        printf("enter full jid: ");
-        fgets(jid, 64, stdin);
-        jid[strlen(jid) - 1] = '\0';
-        printf("enter password: ");
-        fgets(pass, 32, stdin);
-        pass[strlen(pass) - 1] = '\0';
+        // printf("enter full jid: ");
+        // fgets(jid, 64, stdin);
+        // jid[strlen(jid) - 1] = '\0';
+        // printf("enter password: ");
+        // fgets(pass, 32, stdin);
+        // pass[strlen(pass) - 1] = '\0';
+        // xmpp_login(jid, pass);
+        xmpp_login("a", "b");
     }
     else if (option == '2')
     {
-        // char username[32];
-        // char name[64];
-        // char email[64];
-        // printf("enter username: ");
-        // fgets(username, sizeof(username), stdin);
-        // printf("enter password: ");
-        // fgets(pass, sizeof(pass), stdin);
-        // printf("enter your name: ");
-        // fgets(name, sizeof(name), stdin);
-        // printf("enter your email: ");
-        // fgets(email, sizeof(email), stdin);
-        // jid[strlen(jid) - 1] = '\0';
-        // pass[strlen(pass) - 1] = '\0';
-        // name[strlen(name) - 1] = '\0';
-        // name[strlen(email) - 1] = '\0';
-        xmpp_register("jid", "pass", "name");
+        xmpp_register();
     }
     else if (option == '3')
     {

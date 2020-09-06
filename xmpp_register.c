@@ -23,7 +23,6 @@ void send_register_form(
 {
     xmpp_ctx_t *ctx = reg->ctx;
     xmpp_stanza_t *query;
-    xmpp_stanza_t *next;
     xmpp_stanza_t *elem;
     xmpp_stanza_t *text;
     xmpp_stanza_t *iq;
@@ -40,7 +39,6 @@ void send_register_form(
         return;
     }
 
-    next = xmpp_stanza_get_children(query);
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(query, "query");
     xmpp_stanza_set_ns(query, XMPP_NS_REGISTER);
@@ -81,45 +79,6 @@ void send_register_form(
         xmpp_stanza_release(query);
         xmpp_stanza_release(iq);
     }
-}
-
-int xmpp_features_cb(xmpp_conn_t *const conn,
-                     xmpp_stanza_t *const stanza,
-                     void *const userdata)
-{
-    xmpp_reg_t *reg_info = (xmpp_reg_t *)userdata;
-    xmpp_ctx_t *ctx = reg_info->ctx;
-    xmpp_stanza_t *child;
-    xmpp_stanza_t *iq;
-    char *domain;
-
-    // check if server supports registration
-    child = xmpp_stanza_get_child_by_name(stanza, "register");
-    if (child && strcmp(xmpp_stanza_get_ns(child), XMPP_NS_REGISTER) == 0)
-    {
-        fprintf(stderr, "DEBUG: server does not support registration.\n");
-        xmpp_disconnect(conn);
-        return 0;
-    }
-
-    // server supports registration
-    fprintf(stderr, "DEBUG server supports registration.\n");
-
-    // send the request for the register form, and register callback
-    domain = xmpp_jid_domain(ctx, reg_info->jid);
-    iq = xmpp_iq_new(ctx, "get", "register_form_request");
-    xmpp_stanza_set_to(iq, domain);
-    child = xmpp_stanza_new(ctx);
-    xmpp_stanza_set_name(child, "query");
-    xmpp_stanza_set_ns(child, XMPP_NS_REGISTER);
-    xmpp_stanza_add_child(iq, child);
-    xmpp_handler_add(conn, xmpp_register_cb, XMPP_NS_REGISTER, "iq", NULL, reg_info);
-    xmpp_send(conn, iq);
-    xmpp_free(ctx, domain);
-    xmpp_stanza_release(child);
-    xmpp_stanza_release(iq);
-
-    return 0;
 }
 
 // Callback for form submit.
@@ -198,6 +157,45 @@ int xmpp_register_cb(xmpp_conn_t *const conn,
     return 0;
 }
 
+int xmpp_features_cb(xmpp_conn_t *const conn,
+                     xmpp_stanza_t *const stanza,
+                     void *const userdata)
+{
+    xmpp_reg_t *reg_info = (xmpp_reg_t *)userdata;
+    xmpp_ctx_t *ctx = reg_info->ctx;
+    xmpp_stanza_t *child;
+    xmpp_stanza_t *iq;
+    char *domain;
+
+    // check if server supports registration
+    child = xmpp_stanza_get_child_by_name(stanza, "register");
+    if (child && strcmp(xmpp_stanza_get_ns(child), XMPP_NS_REGISTER) == 0)
+    {
+        fprintf(stderr, "DEBUG: server does not support registration.\n");
+        xmpp_disconnect(conn);
+        return 0;
+    }
+
+    // server supports registration
+    fprintf(stderr, "DEBUG server supports registration.\n");
+
+    // send the request for the register form, and register callback
+    domain = xmpp_jid_domain(ctx, reg_info->jid);
+    iq = xmpp_iq_new(ctx, "get", "register_form_request");
+    xmpp_stanza_set_to(iq, domain);
+    child = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(child, "query");
+    xmpp_stanza_set_ns(child, XMPP_NS_REGISTER);
+    xmpp_stanza_add_child(iq, child);
+    xmpp_handler_add(conn, xmpp_register_cb, XMPP_NS_REGISTER, "iq", NULL, reg_info);
+    xmpp_send(conn, iq);
+    xmpp_free(ctx, domain);
+    xmpp_stanza_release(child);
+    xmpp_stanza_release(iq);
+
+    return 0;
+}
+
 void xmpp_conn_cb(xmpp_conn_t *const conn,
                   const xmpp_conn_event_t status,
                   const int error,
@@ -233,7 +231,7 @@ void xmpp_conn_cb(xmpp_conn_t *const conn,
     return;
 }
 
-void xmpp_register(const char *jid, const char *pass, const char *name)
+void xmpp_register()
 {
     xmpp_ctx_t *ctx;
     xmpp_conn_t *conn;
