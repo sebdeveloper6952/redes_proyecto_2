@@ -49,7 +49,8 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         get_roster(conn, ctx);
 
         // test add friend
-        }
+        // send_subscription_request(conn, ctx, "sebdev_gajim@redes2020.xyz");
+    }
     else if (status == XMPP_CONN_DISCONNECT)
     {
         fprintf(stderr, "DEBUG: connection disconnect event.\n");

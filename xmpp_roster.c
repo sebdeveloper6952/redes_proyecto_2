@@ -64,3 +64,13 @@ int presence_subscription_handler(
 
     return 1;
 }
+
+void send_subscription_request(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx, const char *jid)
+{
+    xmpp_stanza_t *p = xmpp_presence_new(ctx);
+    xmpp_stanza_set_from(p, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(p, jid);
+    xmpp_stanza_set_type(p, "subscribe");
+    xmpp_send(conn, p);
+    xmpp_stanza_release(p);
+}
