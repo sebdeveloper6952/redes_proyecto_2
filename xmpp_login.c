@@ -24,22 +24,14 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                 secured ? "secured" : "NOT secured");
 
         // TODO: add all handlers here
-
-        // add handler for presence stanza
-        // xmpp_handler_add(conn, xmpp_subscription_handler, NULL, "presence", NULL, userdata);
-
-        // add service discovery handler
-        // xmpp_id_handler_add(
-        //     conn,
-        //     service_discovery_handler,
-        //     "service_discovery",
-        //     userdata);
+        // add handler for friend requets
+        xmpp_handler_add(conn, presence_subscription_handler, NULL, "presence", "subscribe", NULL);
 
         // add handler for user search result
-        xmpp_id_handler_add(conn, search_result_handler, "search_result", NULL);
+        xmpp_id_handler_add(conn, search_result_handler, SEARCH_USERS_ID, NULL);
 
         // add handler for user roster result
-        xmpp_id_handler_add(conn, roster_result_handler, "get_roster", NULL);
+        xmpp_id_handler_add(conn, roster_result_handler, GET_ROSTER_ID, NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);

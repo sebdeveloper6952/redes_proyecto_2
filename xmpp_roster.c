@@ -29,7 +29,7 @@ int roster_result_handler(
 void get_roster(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
 {
     xmpp_stanza_t *iq, *query;
-    iq = xmpp_iq_new(ctx, "get", "get_roster");
+    iq = xmpp_iq_new(ctx, "get", GET_ROSTER_ID);
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(query, "query");
     xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);

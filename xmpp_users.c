@@ -7,24 +7,31 @@
 void get_all_users(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
 {
     const char *jid = xmpp_conn_get_bound_jid(conn);
-    xmpp_stanza_t *iq_search = xmpp_iq_new(ctx, "set", "search_result");
-    xmpp_stanza_t *query_search = xmpp_stanza_new(ctx);
-    xmpp_stanza_t *query_email = xmpp_stanza_new(ctx);
-    xmpp_stanza_t *email_text = xmpp_stanza_new(ctx);
-    xmpp_stanza_set_to(iq_search, "search.redes2020.xyz");
-    xmpp_stanza_set_from(iq_search, jid);
-    xmpp_stanza_set_name(query_search, "query");
-    xmpp_stanza_set_ns(query_search, XMPP_NS_JABBER_SEARCH);
-    xmpp_stanza_set_name(query_email, "email");
-    xmpp_stanza_set_text(email_text, "*");
-    xmpp_stanza_add_child(query_email, email_text);
-    xmpp_stanza_add_child(query_search, query_email);
-    xmpp_stanza_add_child(iq_search, query_search);
-    xmpp_send(conn, iq_search);
-    xmpp_stanza_release(email_text);
-    xmpp_stanza_release(query_email);
-    xmpp_stanza_release(query_search);
-    xmpp_stanza_release(iq_search);
+    const char *fields[4] = {"email", "first", "last", "nick"};
+    xmpp_stanza_t *iq, *query, *field, *text;
+    iq = xmpp_iq_new(ctx, "set", SEARCH_USERS_ID);
+    query = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(iq, "search.redes2020.xyz");
+    xmpp_stanza_set_name(query, "query");
+    xmpp_stanza_set_ns(query, XMPP_NS_JABBER_SEARCH);
+
+    for (int i = 0; i < 4; i++)
+    {
+        field = xmpp_stanza_new(ctx);
+        text = xmpp_stanza_new(ctx);
+        xmpp_stanza_set_text(text, "*");
+        xmpp_stanza_add_child(field, text);
+        xmpp_stanza_release(text);
+        xmpp_stanza_set_name(field, fields[i]);
+        xmpp_stanza_add_child(query, field);
+        xmpp_stanza_release(field);
+    }
+
+    xmpp_stanza_add_child(iq, query);
+    xmpp_stanza_release(query);
+    xmpp_send(conn, iq);
+    xmpp_stanza_release(iq);
 }
 
 int search_result_handler(
@@ -48,4 +55,27 @@ int search_result_handler(
     }
 
     return 1;
+}
+
+int search_discovery_handler(
+    xmpp_conn_t *const conn,
+    xmpp_stanza_t *const stanza,
+    void *const userdata)
+{
+    return 0;
+}
+
+void search_discovery(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+{
+    xmpp_stanza_t *iq, *query;
+    iq = xmpp_iq_new(ctx, "get", "search_discovery");
+    query = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(iq, "search.redes2020.xyz");
+    xmpp_stanza_set_name(query, "query");
+    xmpp_stanza_set_ns(query, XMPP_NS_JABBER_SEARCH);
+    xmpp_stanza_add_child(iq, query);
+    xmpp_stanza_release(query);
+    xmpp_send(conn, iq);
+    xmpp_stanza_release(iq);
 }
