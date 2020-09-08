@@ -6,6 +6,7 @@
 #include "xmpp_users.h"
 #include "xmpp_presence.h"
 #include "xmpp_account.h"
+#include "xmpp_vcard.h"
 
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         const xmpp_conn_event_t status,
@@ -24,27 +25,29 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                 secured ? "secured" : "NOT secured");
 
         // TODO: add all handlers here
-        // add handler for friend requets
+        // add handler for friend requests
         xmpp_handler_add(conn, presence_subscription_handler, NULL, "presence", "subscribe", NULL);
-
         // presence handler
         xmpp_handler_add(conn, presence_handler, NULL, "presence", NULL, NULL);
-
         // add handler for user search result
         xmpp_id_handler_add(conn, search_result_handler, SEARCH_USERS_ID, NULL);
-
         // add handler for user roster result
         xmpp_id_handler_add(conn, roster_result_handler, GET_ROSTER_ID, NULL);
+        // vcard handler
+        xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);
 
         // testing
-        get_all_users(conn, ctx);
-        get_roster(conn, ctx);
+        // get_all_users(conn, ctx);
+        // get_roster(conn, ctx);
+
+        // test v-card get
+        get_vcard(conn, ctx, "sebdev_gajim@redes2020.xyz");
 
         // test add friend
-        // send_subscription_request(conn, ctx, "javi@redes2020.xyz");
+        // send_subscription_request(conn, ctx, "sebdev_gajim@redes2020.xyz");
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {
