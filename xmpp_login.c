@@ -27,6 +27,9 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // add handler for friend requets
         xmpp_handler_add(conn, presence_subscription_handler, NULL, "presence", "subscribe", NULL);
 
+        // presence handler
+        xmpp_handler_add(conn, presence_handler, NULL, "presence", NULL, NULL);
+
         // add handler for user search result
         xmpp_id_handler_add(conn, search_result_handler, SEARCH_USERS_ID, NULL);
 
@@ -41,7 +44,7 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         get_roster(conn, ctx);
 
         // test add friend
-        // send_subscription_request(conn, ctx, "sebdev_gajim@redes2020.xyz");
+        // send_subscription_request(conn, ctx, "javi@redes2020.xyz");
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {
