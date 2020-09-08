@@ -1,5 +1,6 @@
 #include <strophe.h>
 #include <stdio.h>
+#include <string.h>
 #include "xmpp_presence.h"
 
 int presence_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const data)
@@ -45,4 +46,41 @@ void send_logged_in_presence(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
     xmpp_stanza_release(status);
     xmpp_send(conn, presence);
     xmpp_stanza_release(presence);
+}
+
+void change_presence(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx, status_t st, const char *status)
+{
+    xmpp_stanza_t *p, *sh, *s, *t;
+    p = xmpp_presence_new(ctx);
+    sh = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(sh, "show");
+    t = xmpp_stanza_new(ctx);
+
+    if (st == chat)
+        xmpp_stanza_set_text(t, "chat");
+    if (st == away)
+        xmpp_stanza_set_text(t, "away");
+    if (st == xa)
+        xmpp_stanza_set_text(t, "xa");
+    if (st == dnd)
+        xmpp_stanza_set_text(t, "dnd");
+    xmpp_stanza_add_child(sh, t);
+    xmpp_stanza_release(t);
+    xmpp_stanza_add_child(p, sh);
+    xmpp_stanza_release(sh);
+
+    if (strlen(status) > 0)
+    {
+        s = xmpp_stanza_new(ctx);
+        t = xmpp_stanza_new(ctx);
+        xmpp_stanza_set_name(s, "status");
+        xmpp_stanza_set_text(t, status);
+        xmpp_stanza_add_child(s, t);
+        xmpp_stanza_release(t);
+        xmpp_stanza_add_child(p, s);
+        xmpp_stanza_release(s);
+    }
+
+    xmpp_send(conn, p);
+    xmpp_stanza_release(p);
 }
