@@ -7,6 +7,7 @@
 #include "xmpp_presence.h"
 #include "xmpp_account.h"
 #include "xmpp_vcard.h"
+#include "xmpp_im.h"
 
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         const xmpp_conn_event_t status,
@@ -35,6 +36,8 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         xmpp_id_handler_add(conn, roster_result_handler, GET_ROSTER_ID, NULL);
         // vcard handler
         xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
+        // private message handler
+        xmpp_handler_add(conn, im_handler, NULL, "message", "chat", NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);
@@ -50,7 +53,10 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // send_subscription_request(conn, ctx, "sebdev_gajim@redes2020.xyz");
 
         // test change presence
-        change_presence(conn, ctx, chat, "ola");
+        // change_presence(conn, ctx, chat, "ola");
+
+        // test send private message
+        send_im_message(conn, "sebdev_gajim@redes2020.xyz", "ola gemelo malvado!");
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {
