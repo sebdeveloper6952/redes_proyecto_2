@@ -3,8 +3,13 @@
 #ifndef XMPP_UTILS
 #define XMPP_UTILS
 #define XMPP_NS_JABBER_SEARCH "jabber:iq:search"
+#define XMPP_ST_MESSAGE "message"
+#define XMPP_ST_PRESENCE "presence"
 #define XMPP_TYPE_CHAT "chat"
 #define XMPP_TYPE_GROUPCHAT "groupchat"
+#define XMPP_TYPE_SUBSCRIBE "subscribe"
+#define XMPP_ID_SEARCH_USERS "search_result"
+#define XMPP_ID_GET_ROSTER "get_roster"
 
 typedef struct
 {

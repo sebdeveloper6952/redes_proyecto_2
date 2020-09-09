@@ -28,19 +28,19 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
 
         // TODO: add all handlers here
         // add handler for friend requests
-        xmpp_handler_add(conn, presence_subscription_handler, NULL, "presence", "subscribe", NULL);
+        xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, NULL);
         // presence handler
-        xmpp_handler_add(conn, presence_handler, NULL, "presence", NULL, NULL);
+        xmpp_handler_add(conn, presence_handler, NULL, XMPP_ST_PRESENCE, NULL, NULL);
         // add handler for user search result
-        xmpp_id_handler_add(conn, search_result_handler, SEARCH_USERS_ID, NULL);
+        xmpp_id_handler_add(conn, search_result_handler, XMPP_ID_SEARCH_USERS, NULL);
         // add handler for user roster result
-        xmpp_id_handler_add(conn, roster_result_handler, GET_ROSTER_ID, NULL);
+        xmpp_id_handler_add(conn, roster_result_handler, XMPP_ID_GET_ROSTER, NULL);
         // vcard handler
         xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
         // private message handler
-        xmpp_handler_add(conn, im_handler, NULL, "message", XMPP_TYPE_CHAT, NULL);
+        xmpp_handler_add(conn, im_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_CHAT, NULL);
         // group chat message handler
-        xmpp_handler_add(conn, gm_msg_handler, NULL, "message", XMPP_TYPE_GROUPCHAT, NULL);
+        xmpp_handler_add(conn, gm_msg_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_GROUPCHAT, NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);

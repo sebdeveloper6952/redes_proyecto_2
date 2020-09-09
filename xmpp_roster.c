@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "xmpp_roster.h"
+#include "xmpp_utils.h"
 
 // Get the user roster.
 int roster_result_handler(
@@ -29,7 +30,7 @@ int roster_result_handler(
 void get_roster(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
 {
     xmpp_stanza_t *iq, *query;
-    iq = xmpp_iq_new(ctx, "get", GET_ROSTER_ID);
+    iq = xmpp_iq_new(ctx, "get", XMPP_ID_GET_ROSTER);
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(query, "query");
     xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);
