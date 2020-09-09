@@ -8,6 +8,7 @@
 #include "xmpp_account.h"
 #include "xmpp_vcard.h"
 #include "xmpp_im.h"
+#include "xmpp_gm.h"
 
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         const xmpp_conn_event_t status,
@@ -37,7 +38,9 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // vcard handler
         xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
         // private message handler
-        xmpp_handler_add(conn, im_handler, NULL, "message", "chat", NULL);
+        xmpp_handler_add(conn, im_handler, NULL, "message", XMPP_TYPE_CHAT, NULL);
+        // group chat message handler
+        xmpp_handler_add(conn, gm_msg_handler, NULL, "message", XMPP_TYPE_GROUPCHAT, NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, ctx);
@@ -56,7 +59,11 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // change_presence(conn, ctx, chat, "ola");
 
         // test send private message
-        send_im_message(conn, "sebdev_gajim@redes2020.xyz", "ola gemelo malvado!");
+        // send_im_msg(conn, "jua17315@redes2020.xyz", "ola?");
+
+        // join group
+        // join_gm_room(conn, "f1", "pierre_gasly");
+        // send_gm_msg(conn, "f1@conference.redes2020.xyz", "mugello!!!!1");
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {

@@ -3,6 +3,8 @@
 #ifndef XMPP_UTILS
 #define XMPP_UTILS
 #define XMPP_NS_JABBER_SEARCH "jabber:iq:search"
+#define XMPP_TYPE_CHAT "chat"
+#define XMPP_TYPE_GROUPCHAT "groupchat"
 
 typedef struct
 {
