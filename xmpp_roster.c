@@ -11,24 +11,38 @@ int roster_result_handler(
     void *const userdata)
 {
     xmpp_stanza_t *query, *next;
+    my_data *data = (my_data *)userdata;
+    char roster_buf[64 * 37];
 
+    memset(roster_buf, 0, sizeof(roster_buf));
     query = xmpp_stanza_get_child_by_name(stanza, "query");
     if (query)
         next = xmpp_stanza_get_children(query);
     while (next)
     {
         const char *roster_jid = xmpp_stanza_get_attribute(next, "jid");
+        // if roster contact is valid
         if (roster_jid)
-            fprintf(stderr, "DEBUG: ROSTER has contact '%s'.\n", roster_jid);
+        {
+            strcat(roster_buf, " * ");
+            strcat(roster_buf, roster_jid);
+            strcat(roster_buf, "\n");
+        }
+
         next = xmpp_stanza_get_next(next);
     }
 
-    return 1;
+    // callback
+    data->cb(roster_buf);
+
+    return 0;
 }
 
 // Send IQ stanza to get the users roster.
-void get_roster(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+void get_roster(xmpp_conn_t *const conn)
 {
+    // send iq
+    xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     xmpp_stanza_t *iq, *query;
     iq = xmpp_iq_new(ctx, "get", XMPP_ID_GET_ROSTER);
     query = xmpp_stanza_new(ctx);
@@ -66,8 +80,9 @@ int presence_subscription_handler(
     return 1;
 }
 
-void send_subscription_request(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx, const char *jid)
+void send_subscription_request(xmpp_conn_t *const conn, const char *jid)
 {
+    xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     xmpp_stanza_t *p = xmpp_presence_new(ctx);
     xmpp_stanza_set_from(p, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(p, jid);

@@ -17,7 +17,12 @@ typedef struct
     const char *jid;
 } xmpp_reg_t;
 
-xmpp_reg_t *xmpp_reg_new(void);
+typedef struct
+{
+    xmpp_ctx_t *ctx;
+    void (*cb)(const char *data);
+} my_data;
+
 void print_menu();
 void get_jid_and_pass(char *jid, char *pass);
 #endif

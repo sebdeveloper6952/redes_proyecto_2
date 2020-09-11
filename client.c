@@ -32,7 +32,7 @@ int main(int argc, char **argv)
         // fgets(pass, 32, stdin);
         // pass[strlen(pass) - 1] = '\0';
         // xmpp_login(jid, pass);
-        xmpp_login("a", "b");
+        xmpp_login("a", "b", NULL);
     }
     else if (option == '2')
     {

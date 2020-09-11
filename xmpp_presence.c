@@ -20,8 +20,8 @@ int presence_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void 
     if (st)
         status = xmpp_stanza_get_text(st);
 
-    fprintf(stderr, "DEBUG: GOT <presence/> from %s, show(%s) - status(%s).\n",
-            from, show ? show : "-", status ? status : "-");
+    // fprintf(stderr, "DEBUG: GOT <presence/> from %s, show(%s) - status(%s).\n",
+    //         from, show ? show : "-", status ? status : "-");
 
     if (show)
         xmpp_free(ctx, show);

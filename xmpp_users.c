@@ -1,15 +1,18 @@
 #include <strophe.h>
 #include <stdio.h>
+#include <string.h>
 #include "xmpp_utils.h"
 #include "xmpp_users.h"
 
 // Use the search service to get all users.
-void get_all_users(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+void get_all_users(xmpp_conn_t *const conn)
 {
+    xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
+    xmpp_stanza_t *iq, *query, *field, *text;
     const char *jid = xmpp_conn_get_bound_jid(conn);
     const char *fields[4] = {"email", "first", "last", "nick"};
-    xmpp_stanza_t *iq, *query, *field, *text;
-    iq = xmpp_iq_new(ctx, "set", SEARCH_USERS_ID);
+
+    iq = xmpp_iq_new(ctx, "set", XMPP_ID_SEARCH_USERS);
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(iq, "search.redes2020.xyz");
@@ -42,6 +45,8 @@ int search_result_handler(
     xmpp_stanza_t *query = NULL;
     xmpp_stanza_t *next = NULL;
     xmpp_stanza_t *item = NULL;
+    my_data *data = (my_data *)userdata;
+    char users_buf[64 * 37];
 
     query = xmpp_stanza_get_child_by_name(stanza, "query");
     if (query)
@@ -50,11 +55,18 @@ int search_result_handler(
     {
         const char *jid = xmpp_stanza_get_attribute(next, "jid");
         if (jid)
-            fprintf(stderr, "DEBUG: found user '%s'\n", jid);
+        {
+            strcat(users_buf, " * ");
+            strcat(users_buf, jid);
+            strcat(users_buf, "\n");
+        }
         next = xmpp_stanza_get_next(next);
     }
 
-    return 1;
+    // callback
+    data->cb(users_buf);
+
+    return 0;
 }
 
 int search_discovery_handler(
@@ -65,8 +77,9 @@ int search_discovery_handler(
     return 0;
 }
 
-void search_discovery(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+void search_discovery(xmpp_conn_t *const conn)
 {
+    xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     xmpp_stanza_t *iq, *query;
     iq = xmpp_iq_new(ctx, "get", "search_discovery");
     query = xmpp_stanza_new(ctx);
