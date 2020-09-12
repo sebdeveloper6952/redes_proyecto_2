@@ -1,5 +1,6 @@
 #include <strophe.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "xmpp_roster.h"
 #include "xmpp_utils.h"
@@ -34,6 +35,7 @@ int roster_result_handler(
 
     // callback
     data->cb(roster_buf);
+    free(data);
 
     return 0;
 }

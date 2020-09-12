@@ -4,25 +4,38 @@
 #include "xmpp_im.h"
 #include "xmpp_utils.h"
 
-int im_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const data)
+int im_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata)
 {
+    xmpp_ctx_t *ctx;
     xmpp_stanza_t *body;
-    char msg[1024];
+    my_data *data = (my_data *)userdata;
+    char msg[1024] = {};
     const char *from;
+    char *msg_body;
 
+    ctx = xmpp_conn_get_context(conn);
     body = xmpp_stanza_get_child_by_name(st, "body");
     from = xmpp_stanza_get_attribute(st, "from");
 
-    strcat(msg, "\n\n******* PRIVATE MSG *******\n");
-    strcat(msg, "* FROM: ");
-    strcat(msg, from);
-    strcat(msg, "\n");
-    strcat(msg, "* BODY: ");
-    if (body)
-        strcat(msg, xmpp_stanza_get_text(body));
-    strcat(msg, "\n***************************\n");
+    // strcat(msg, "\n\n******* PRIVATE MSG *******\n");
+    // strcat(msg, "* FROM: ");
+    // strcat(msg, from);
+    // strcat(msg, "\n");
+    // strcat(msg, "* BODY: ");
+    // if (body)
+    // {
+    //     msg_body = xmpp_stanza_get_text(body);
+    //     strcat(msg, msg_body);
+    // }
+    // strcat(msg, "\n***************************\n");
+    // fprintf(stderr, "%s\n", msg);
 
-    fprintf(stderr, "%s\n", msg);
+    if (body && data->msg_cb != NULL)
+    {
+        msg_body = xmpp_stanza_get_text(body);
+        data->msg_cb(from, msg_body);
+        xmpp_free(ctx, msg_body);
+    }
 
     return 1;
 }

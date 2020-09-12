@@ -21,6 +21,7 @@ typedef struct
 {
     xmpp_ctx_t *ctx;
     void (*cb)(const char *data);
+    void (*msg_cb)(const char *jid, const char *body);
 } my_data;
 
 void print_menu();

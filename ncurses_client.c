@@ -7,39 +7,21 @@
 
 WINDOW *create_newwin(int height, int width, int starty, int startx);
 void destroy_win(WINDOW *local_win);
-
-WINDOW *title, *help, *prompt, *content;
-pthread_t worker_thread;
-
-void on_login()
-{
-    wclear(title);
-    wborder(title, '|', '|', '-', '-', '*', '*', '*', '*');
-    mvwprintw(title, 1, COLS / 2 - 2, "HackerChat");
-    wrefresh(title);
-}
-
-void on_users_result(const char *roster)
-{
-    wclear(content);
-    const char *roster_title = "Users on the Server";
-    mvwprintw(content, 1, (COLS / 2) - 30, roster_title);
-    mvwprintw(content, 3, 1, "%s", roster);
-    wborder(content, '|', '|', '-', '-', '*', '*', '*', '*');
-    wrefresh(content);
-}
-
-void on_roster_result(const char *roster)
-{
-    wclear(content);
-    const char *roster_title = "Your Roster";
-    mvwprintw(content, 1, (COLS / 2) - 30, roster_title);
-    mvwprintw(content, 3, 1, "%s", roster);
-    wborder(content, '|', '|', '-', '-', '*', '*', '*', '*');
-    wrefresh(content);
-}
-
+void clear_win(WINDOW *w);
+void update_win(WINDOW *w, const char *title, const char *content);
+void clear_prompt();
+void on_login();
+void on_users_result(const char *roster);
+void on_roster_result(const char *roster);
+void on_my_presence_result(const char *new_presence);
+void on_msg(const char *jid_from, const char *body);
 void *thread_work(void *data);
+
+WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
+pthread_t worker_thread;
+char curr_chat_jid[256] = {};
+char in_p_chat = 0, in_g_chat = 0;
+unsigned int curr_msg_count = 0;
 
 int main(int argc, char *argv[])
 {
@@ -82,70 +64,191 @@ int main(int argc, char *argv[])
         width = COLS - 10;
         starty = 0;
         startx = 5;
-        title = create_newwin(height, width, starty, startx);
-        wbkgd(title, COLOR_PAIR(1));
-        mvwprintw(title, 1, COLS / 2 - 2, "Loggin in, please wait...");
-        wrefresh(title);
+        w_title = create_newwin(height, width, starty, startx);
+        wbkgd(w_title, COLOR_PAIR(1));
+        mvwprintw(w_title, 1, COLS / 2 - 2, "Logging in, please wait...");
+        wrefresh(w_title);
 
+        w_help = create_newwin(LINES - 3, 30, 3, 5);
+        wbkgd(w_help, COLOR_PAIR(1));
+        mvwprintw(w_help, 1, 11, "COMMANDS");
+        mvwprintw(w_help, 3, 2, "/help <command>");
+        mvwprintw(w_help, 4, 2, "/users");
+        mvwprintw(w_help, 5, 2, "/roster [add <jid>]");
+        mvwprintw(w_help, 6, 2, "/presence <show> <status>");
+        mvwprintw(w_help, 7, 2, "/priv <jid>");
+        mvwprintw(w_help, 8, 2, "/group <room_jid>");
+        mvwprintw(w_help, 9, 2, "/vcard <jid>");
+        mvwprintw(w_help, 10, 2, "/file <path> <jid>");
+        mvwprintw(w_help, 11, 2, "/menu");
+        mvwprintw(w_help, 12, 2, "/quit");
+        wrefresh(w_help);
+
+        w_active = create_newwin(LINES - 3, 30, 3, 35);
+        wbkgd(w_active, COLOR_PAIR(1));
+        mvwprintw(w_active, 1, 11, "ACTIVE USERS");
+        wrefresh(w_active);
+
+        w_content = create_newwin(LINES - 5, COLS - 70, 3, 65);
+        wbkgd(w_content, COLOR_PAIR(1));
+        mvwprintw(w_content, 1, 1, "MENU");
+        wrefresh(w_content);
+
+        w_prompt = create_newwin(3, COLS - 70, LINES - 3, 65);
+        wbkgd(w_prompt, COLOR_PAIR(1));
+        mvwprintw(w_prompt, 1, 1, "COMMAND: ");
+        wrefresh(w_prompt);
+
+        // start the xmpp client
         pthread_create(&worker_thread, NULL, thread_work, NULL);
-
-        help = create_newwin(LINES - 3, 30, 3, 5);
-        wbkgd(help, COLOR_PAIR(1));
-        mvwprintw(help, 1, 11, "COMMANDS");
-        mvwprintw(help, 3, 2, "/help <command>");
-        mvwprintw(help, 4, 2, "/users");
-        mvwprintw(help, 5, 2, "/roster");
-        mvwprintw(help, 6, 2, "/priv <jid>");
-        mvwprintw(help, 7, 2, "/quit");
-        wrefresh(help);
-
-        content = create_newwin(LINES - 6, COLS - 41, 3, 36);
-        wbkgd(content, COLOR_PAIR(1));
-        mvwprintw(content, 1, 1, "Content ");
-        wrefresh(content);
-
-        prompt = create_newwin(3, COLS - 41, LINES - 3, 36);
-        wbkgd(prompt, COLOR_PAIR(1));
-        mvwprintw(prompt, 1, 1, "COMMAND: ");
-        wrefresh(prompt);
 
         // ask for command, clear and redraw the prompt
         char cmd[256];
-        wgetstr(prompt, cmd);
-        wclear(prompt);
-        wborder(prompt, '|', '|', '-', '-', '*', '*', '*', '*');
-        mvwprintw(prompt, 1, 1, "COMMAND: ");
-        wrefresh(prompt);
+        char *tokens[10];
+        char *o_cmd, *token;
+        int i = 0;
 
-        int i = 1;
+        wgetstr(w_prompt, cmd);
+        clear_prompt();
+
         while (1)
         {
-            if (strcmp(cmd, "/quit") == 0)
-                break;
-
-            if (strcmp(cmd, "/help"))
+            // if not in chat
+            if (in_p_chat == 0 && in_g_chat == 0)
             {
+                // split command
+                o_cmd = strdup(cmd);
+                while ((token = strsep(&o_cmd, " ")) != NULL)
+                    tokens[i++] = token;
+
+                if (tokens[0] == "\n")
+                    continue;
+
+                if (strcmp(tokens[0], "/quit") == 0)
+                    break;
+
+                // go back to main menu
+                if (strcmp(tokens[0], "/menu") == 0)
+                {
+                    in_p_chat = 0;
+                    in_g_chat = 0;
+                    update_win(w_content, "MENU", "");
+                }
+
+                // command usage help
+                if (strcmp(tokens[0], "/help") == 0)
+                {
+                    if (strcmp(tokens[1], "users") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "HELP",
+                            "- usage: /users\n"
+                            " - description: shows all users that have an account on the server");
+                    }
+                }
+
+                if (strcmp(tokens[0], "/users") == 0)
+                {
+                    xmpp_client_get_users(on_users_result);
+                }
+
+                if (strcmp(tokens[0], "/roster") == 0)
+                {
+                    xmpp_client_get_roster(on_roster_result);
+                }
+
+                if (strcmp(tokens[0], "/presence") == 0)
+                {
+                    if (tokens[1] != NULL)
+                    {
+                        status_t st;
+                        char status[256] = {};
+
+                        if (strcmp(tokens[1], "away") == 0)
+                            st = away;
+                        else if (strcmp(tokens[1], "xa") == 0)
+                            st = xa;
+                        else if (strcmp(tokens[1], "dnd") == 0)
+                            st = dnd;
+                        else if (strcmp(tokens[1], "available") == 0)
+                            st = available;
+
+                        for (int i = 2; i < 10; i++)
+                        {
+                            if (tokens[i] != NULL)
+                            {
+                                strcat(status, tokens[i]);
+                                strcat(status, " ");
+                            }
+                        }
+
+                        xmpp_client_set_presence(
+                            st,
+                            status,
+                            on_my_presence_result);
+                    }
+                }
+
+                if (strcmp(tokens[0], "/priv") == 0)
+                {
+                    if (tokens[1] != NULL)
+                    {
+                        in_p_chat = 1;
+                        strcpy(curr_chat_jid, tokens[1]);
+                        char title[256] = {};
+                        strcat(title, "PRIVATE CHAT WITH [");
+                        strcat(title, tokens[1]);
+                        strcat(title, "]");
+                        update_win(w_content, title, "");
+                    }
+                }
+
+                if (strcmp(tokens[0], "/group") == 0)
+                {
+                    if (tokens[1] != NULL && tokens[2] != NULL)
+                    {
+                        in_g_chat = 1;
+                        xmpp_client_join_group_chat(tokens[1], tokens[2]);
+                    }
+                }
+            }
+            // if in private or group chat
+            else
+            {
+                if (strcmp(cmd, "/menu") == 0)
+                {
+                    in_p_chat = 0;
+                    in_g_chat = 0;
+                    update_win(w_content, "MENU", "");
+                }
+
+                if (in_p_chat)
+                {
+                    // private chat message
+                    xmpp_client_send_msg(1, curr_chat_jid, cmd);
+                }
+                else
+                {
+                    // group chat message
+                }
             }
 
-            if (strcmp(cmd, "/users") == 0)
-            {
-                xmpp_client_get_users(on_users_result);
-            }
+            // command buffers reset
+            for (int i = 0; i < 10; i++)
+                tokens[i] = NULL;
+            i = 0;
 
-            if (strcmp(cmd, "/roster") == 0)
-            {
-                xmpp_client_get_roster(on_roster_result);
-            }
-
-            wgetstr(prompt, cmd);
-            wclear(prompt);
-            wborder(prompt, '|', '|', '-', '-', '*', '*', '*', '*');
-            mvwprintw(prompt, 1, 1, "COMMAND: ");
-            wrefresh(prompt);
+            wgetstr(w_prompt, cmd);
+            wclear(w_prompt);
+            wborder(w_prompt, '|', '|', '-', '-', '*', '*', '*', '*');
+            mvwprintw(w_prompt, 1, 1, "COMMAND: ");
+            wrefresh(w_prompt);
         }
     }
 
     // release resources
+    pthread_cancel(worker_thread);
     endwin();
 
     return 0;
@@ -165,4 +268,75 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
 void *thread_work(void *data)
 {
     xmpp_login("a", "a", on_login);
+}
+
+void update_win(WINDOW *w, const char *title, const char *content)
+{
+    wclear(w);
+    mvwprintw(w, 1, 1, title);
+    mvwprintw(w, 3, 1, "%s", content);
+    wborder(w, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w);
+}
+
+void clear_win(WINDOW *w)
+{
+    wclear(w);
+    wborder(w, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w);
+}
+
+void clear_prompt()
+{
+    wclear(w_prompt);
+    wborder(w_prompt, '|', '|', '-', '-', '*', '*', '*', '*');
+    mvwprintw(w_prompt, 1, 1, "COMMAND: ");
+    wrefresh(w_prompt);
+}
+
+void on_login()
+{
+    wclear(w_title);
+    wborder(w_title, '|', '|', '-', '-', '*', '*', '*', '*');
+    mvwprintw(w_title, 1, COLS / 2 - 2, "sebdev@redes2020.xyz []");
+    wrefresh(w_title);
+    // xmpp client handlers
+    xmpp_client_add_priv_msg_handler(on_msg);
+    xmpp_client_add_gm_msg_handler(on_msg);
+}
+
+void on_users_result(const char *roster)
+{
+    wclear(w_content);
+    const char *roster_title = "ALL USERS";
+    mvwprintw(w_content, 1, (COLS / 2) - 30, roster_title);
+    mvwprintw(w_content, 3, 2, "%s", roster);
+    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_content);
+}
+
+void on_roster_result(const char *roster)
+{
+    wclear(w_content);
+    const char *roster_title = "YOUR ROSTER";
+    mvwprintw(w_content, 1, (COLS / 2) - 30, roster_title);
+    mvwprintw(w_content, 3, 1, "%s", roster);
+    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_content);
+}
+
+void on_my_presence_result(const char *new_presence)
+{
+    wclear(w_title);
+    mvwprintw(w_title, 1, COLS / 2 - 2, "sebdev@redes2020.xyz [%s]", new_presence);
+    wborder(w_title, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_title);
+}
+
+void on_msg(const char *jid_from, const char *body)
+{
+    if (in_p_chat)
+        update_win(w_content, "PRIVATE MSG", body);
+    else if (in_g_chat)
+        update_win(w_content, "GROUP MSG", body);
 }

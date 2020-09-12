@@ -16,6 +16,16 @@
 // global connection
 static xmpp_conn_t *conn;
 
+my_data *new_data()
+{
+    my_data *data;
+    data = malloc(sizeof(*data));
+    if (data != NULL)
+        memset(data, 0, sizeof(*data));
+
+    return data;
+}
+
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         const xmpp_conn_event_t status,
                         const int error,
@@ -37,14 +47,18 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, NULL);
         // presence handler
         xmpp_handler_add(conn, presence_handler, NULL, XMPP_ST_PRESENCE, NULL, NULL);
+
         // vcard handler
-        xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
+        // xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
+
         // private message handler
-        xmpp_handler_add(conn, im_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_CHAT, NULL);
+        // xmpp_handler_add(conn, im_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_CHAT, NULL);
+
         // group chat message handler
-        xmpp_handler_add(conn, gm_msg_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_GROUPCHAT, NULL);
+        // xmpp_handler_add(conn, gm_msg_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_GROUPCHAT, NULL);
+
         // file transfer init handler
-        xmpp_handler_add(conn, file_transfer_init_handler, NULL, "iq", "set", NULL);
+        // xmpp_handler_add(conn, file_transfer_init_handler, NULL, "iq", "set", NULL);
 
         // send the presence stanza to show available status
         send_logged_in_presence(conn, data->ctx);
@@ -54,7 +68,7 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
             data->cb(NULL);
 
         // testing
-        // get_all_users(conn, ctx);
+        // get_all_users(conn);
         // get_roster(conn, ctx);
 
         // test v-card get
@@ -117,14 +131,10 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
     xmpp_conn_set_pass(conn, "sebasxmpp0985");
 
     // connect to server
-    my_data *data;
-    data = malloc(sizeof(*data));
-    if (data != NULL)
-    {
-        memset(data, 0, sizeof(*data));
-        data->ctx = ctx;
-        data->cb = on_login;
-    }
+    my_data *data = new_data();
+    data->ctx = ctx;
+    data->cb = on_login;
+    data->msg_cb = NULL;
 
     xmpp_connect_client(conn, NULL, 0, xmpp_login_conn_cb, data);
 
@@ -140,14 +150,10 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
 void xmpp_client_get_roster(void(*on_result))
 {
     // attach handler for result
-    my_data *data;
-    data = malloc(sizeof(*data));
-    if (data != NULL)
-        memset(data, 0, sizeof(*data));
+    my_data *data = new_data();
     data->cb = on_result;
     // add handler for user roster result
     xmpp_id_handler_add(conn, roster_result_handler, XMPP_ID_GET_ROSTER, data);
-
     // roster request
     get_roster(conn);
 }
@@ -155,14 +161,53 @@ void xmpp_client_get_roster(void(*on_result))
 void xmpp_client_get_users(void(*on_result))
 {
     // attach handler for result
-    my_data *data;
-    data = malloc(sizeof(*data));
-    if (data != NULL)
-        memset(data, 0, sizeof(*data));
+    my_data *data = new_data();
     data->cb = on_result;
-
     // add handler for user search result
     xmpp_id_handler_add(conn, search_result_handler, XMPP_ID_SEARCH_USERS, data);
-    // roster request
+    // send user request
     get_all_users(conn);
+}
+
+void xmpp_client_set_presence(status_t av, const char *status, void(*on_result))
+{
+    // attach handler for result
+    my_data *data = new_data();
+    data->cb = on_result;
+    // my presence change handler
+    xmpp_id_handler_add(conn, my_presence_handler, "my_presence_change", data);
+    // send presence to server
+    change_presence(conn, av, status);
+}
+
+void xmpp_client_add_priv_msg_handler(void(*on_result))
+{
+    // attach handler for result
+    my_data *data = new_data();
+    data->msg_cb = on_result;
+    // private message handler
+    xmpp_handler_add(conn, im_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_CHAT, data);
+}
+
+void xmpp_client_add_gm_msg_handler(void(*on_result))
+{
+    // attach handler for result
+    my_data *data = new_data();
+    data->msg_cb = on_result;
+    // group chat message handler
+    xmpp_handler_add(conn, gm_msg_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_GROUPCHAT, data);
+}
+
+void xmpp_client_join_group_chat(const char *group_jid, const char *nick)
+{
+    join_gm_room(conn, group_jid, nick);
+}
+
+void xmpp_client_send_msg(const char *is_priv, const char *jid, const char *msg)
+{
+    if (is_priv)
+    {
+        // send message
+        send_im_msg(conn, jid, msg);
+    }
 }
