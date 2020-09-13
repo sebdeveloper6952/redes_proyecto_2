@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strophe.h>
 #include "xmpp_login.h"
@@ -14,7 +15,9 @@ void on_login();
 void on_users_result(const char *roster);
 void on_roster_result(const char *roster);
 void on_my_presence_result(const char *new_presence);
+void on_presence(const char *jid, const char *st);
 void on_msg(const char *jid_from, const char *body);
+void show_saved_presences(void);
 void *thread_work(void *data);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
@@ -22,6 +25,10 @@ pthread_t worker_thread;
 char curr_chat_jid[256] = {};
 char in_p_chat = 0, in_g_chat = 0;
 unsigned int curr_msg_count = 0;
+
+// presence handling
+unsigned char p_count = 0;
+char *pres_arr[100] = {};
 
 int main(int argc, char *argv[])
 {
@@ -75,26 +82,22 @@ int main(int argc, char *argv[])
         mvwprintw(w_help, 3, 2, "/help <command>");
         mvwprintw(w_help, 4, 2, "/users");
         mvwprintw(w_help, 5, 2, "/roster [add <jid>]");
-        mvwprintw(w_help, 6, 2, "/presence <show> <status>");
-        mvwprintw(w_help, 7, 2, "/priv <jid>");
-        mvwprintw(w_help, 8, 2, "/group <room_jid>");
-        mvwprintw(w_help, 9, 2, "/vcard <jid>");
-        mvwprintw(w_help, 10, 2, "/file <path> <jid>");
-        mvwprintw(w_help, 11, 2, "/menu");
-        mvwprintw(w_help, 12, 2, "/quit");
+        mvwprintw(w_help, 6, 2, "/active");
+        mvwprintw(w_help, 7, 2, "/presence <show> <status>");
+        mvwprintw(w_help, 8, 2, "/priv <jid>");
+        mvwprintw(w_help, 9, 2, "/group <room_jid>");
+        mvwprintw(w_help, 10, 2, "/vcard <jid>");
+        mvwprintw(w_help, 11, 2, "/file <path> <jid>");
+        mvwprintw(w_help, 12, 2, "/menu");
+        mvwprintw(w_help, 13, 2, "/quit");
         wrefresh(w_help);
 
-        w_active = create_newwin(LINES - 3, 30, 3, 35);
-        wbkgd(w_active, COLOR_PAIR(1));
-        mvwprintw(w_active, 1, 11, "ACTIVE USERS");
-        wrefresh(w_active);
-
-        w_content = create_newwin(LINES - 5, COLS - 70, 3, 65);
+        w_content = create_newwin(LINES - 5, COLS - 40, 3, 35);
         wbkgd(w_content, COLOR_PAIR(1));
         mvwprintw(w_content, 1, 1, "MENU");
         wrefresh(w_content);
 
-        w_prompt = create_newwin(3, COLS - 70, LINES - 3, 65);
+        w_prompt = create_newwin(3, COLS - 40, LINES - 3, 35);
         wbkgd(w_prompt, COLOR_PAIR(1));
         mvwprintw(w_prompt, 1, 1, "COMMAND: ");
         wrefresh(w_prompt);
@@ -156,6 +159,11 @@ int main(int argc, char *argv[])
                 if (strcmp(tokens[0], "/roster") == 0)
                 {
                     xmpp_client_get_roster(on_roster_result);
+                }
+
+                if (strcmp(tokens[0], "/active") == 0)
+                {
+                    show_saved_presences();
                 }
 
                 if (strcmp(tokens[0], "/presence") == 0)
@@ -301,6 +309,7 @@ void on_login()
     mvwprintw(w_title, 1, COLS / 2 - 2, "sebdev@redes2020.xyz []");
     wrefresh(w_title);
     // xmpp client handlers
+    xmpp_client_add_presence_handler(on_presence);
     xmpp_client_add_priv_msg_handler(on_msg);
     xmpp_client_add_gm_msg_handler(on_msg);
 }
@@ -336,7 +345,36 @@ void on_my_presence_result(const char *new_presence)
 void on_msg(const char *jid_from, const char *body)
 {
     if (in_p_chat)
+    {
         update_win(w_content, "PRIVATE MSG", body);
+    }
     else if (in_g_chat)
+    {
         update_win(w_content, "GROUP MSG", body);
+    }
+}
+
+void on_presence(const char *jid, const char *status)
+{
+    char *new_p;
+    new_p = malloc(256);
+    memset(new_p, 0, 256);
+    new_p[0] = '[';
+    strcat(new_p, jid);
+    strcat(new_p, "]");
+    strcat(new_p, "(");
+    strcat(new_p, status);
+    strcat(new_p, ")");
+    pres_arr[p_count++] = new_p;
+}
+
+void show_saved_presences(void)
+{
+    wclear(w_content);
+
+    for (int i = 0; i < p_count; i++)
+        mvwprintw(w_content, 3 + i, 3, pres_arr[i]);
+
+    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_content);
 }

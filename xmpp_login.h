@@ -12,3 +12,4 @@ void xmpp_client_send_msg(char is_p, const char *jid, const char *msg);
 void xmpp_client_add_priv_msg_handler(void(*on_result));
 void xmpp_client_join_group_chat(const char *group_jid, const char *nick);
 void xmpp_client_add_gm_msg_handler(void(*on_result));
+void xmpp_client_add_presence_handler(void(*on_result));

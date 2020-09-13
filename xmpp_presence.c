@@ -4,10 +4,11 @@
 #include "xmpp_presence.h"
 #include "xmpp_utils.h"
 
-int presence_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const data)
+int presence_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const userdata)
 {
     xmpp_ctx_t *ctx;
     xmpp_stanza_t *st;
+    my_data *data = (my_data *)userdata;
     const char *from;
     char *show = NULL, *status = NULL;
 
@@ -23,6 +24,9 @@ int presence_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void 
 
     // fprintf(stderr, "DEBUG: GOT <presence/> from %s, show(%s) - status(%s).\n",
     //         from, show ? show : "-", status ? status : "-");
+
+    if (data->msg_cb != NULL)
+        data->msg_cb(from ? from : "", status ? status : "");
 
     if (show)
         xmpp_free(ctx, show);

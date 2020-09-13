@@ -44,9 +44,7 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         //         secured ? "secured" : "NOT secured");
 
         // add handler for friend requests
-        xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, NULL);
-        // presence handler
-        xmpp_handler_add(conn, presence_handler, NULL, XMPP_ST_PRESENCE, NULL, NULL);
+        // xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, NULL);
 
         // vcard handler
         // xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
@@ -210,4 +208,13 @@ void xmpp_client_send_msg(const char *is_priv, const char *jid, const char *msg)
         // send message
         send_im_msg(conn, jid, msg);
     }
+}
+
+void xmpp_client_add_presence_handler(void(*on_result))
+{
+    // attach handler for result
+    my_data *data = new_data();
+    data->msg_cb = on_result;
+    // presence handler
+    xmpp_handler_add(conn, presence_handler, NULL, XMPP_ST_PRESENCE, NULL, data);
 }
