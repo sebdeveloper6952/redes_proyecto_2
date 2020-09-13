@@ -112,6 +112,7 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
 
     // initialize library
     xmpp_initialize();
+
     // log = xmpp_get_default_logger(XMPP_LEVEL_DEBUG);
     // ctx = xmpp_ctx_new(NULL, log);
 
@@ -204,10 +205,9 @@ void xmpp_client_join_group_chat(const char *group_jid, const char *nick)
 void xmpp_client_send_msg(const char *is_priv, const char *jid, const char *msg)
 {
     if (is_priv)
-    {
-        // send message
         send_im_msg(conn, jid, msg);
-    }
+    else
+        send_gm_msg(conn, jid, msg);
 }
 
 void xmpp_client_add_presence_handler(void(*on_result))

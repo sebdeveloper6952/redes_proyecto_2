@@ -4,25 +4,31 @@
 #include "xmpp_gm.h"
 #include "xmpp_utils.h"
 
-int gm_msg_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const data)
+int gm_msg_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata)
 {
-    xmpp_stanza_t *body;
+    my_data *data = (my_data *)userdata;
+    xmpp_stanza_t *st_body;
     char msg[1024];
     const char *from;
+    char *c_body = NULL;
 
-    body = xmpp_stanza_get_child_by_name(st, "body");
+    st_body = xmpp_stanza_get_child_by_name(st, "body");
     from = xmpp_stanza_get_attribute(st, "from");
 
-    strcat(msg, "\n\n******* GROUP MSG *******\n");
-    strcat(msg, "* FROM: ");
-    strcat(msg, from);
-    strcat(msg, "\n");
-    strcat(msg, "* BODY: ");
-    if (body)
-        strcat(msg, xmpp_stanza_get_text(body));
-    strcat(msg, "\n***************************\n");
+    // strcat(msg, "\n\n******* GROUP MSG *******\n");
+    // strcat(msg, "* FROM: ");
+    // strcat(msg, from);
+    // strcat(msg, "\n");
+    // strcat(msg, "* BODY: ");
+    // if (body)
+    //     strcat(msg, xmpp_stanza_get_text(body));
+    // strcat(msg, "\n***************************\n");
+    // fprintf(stderr, "%s\n", msg);
 
-    fprintf(stderr, "%s\n", msg);
+    if (st_body)
+        c_body = xmpp_stanza_get_text(st_body);
+    if (data->msg_cb != NULL)
+        data->msg_cb(from ? from : "", c_body ? c_body : "");
 
     return 1;
 }
@@ -44,10 +50,14 @@ void join_gm_room(xmpp_conn_t *const conn, const char *room_name, const char *ni
     xmpp_stanza_release(p);
 }
 
-void send_gm_msg(xmpp_conn_t *const conn, const char *group_jid, const char *body)
+void send_gm_msg(xmpp_conn_t *const conn, const char *jid, const char *body)
 {
     xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     xmpp_stanza_t *msg;
+    char group_jid[256] = {};
+
+    strcat(group_jid, jid);
+    strcat(group_jid, "@conference.redes2020.xyz");
 
     msg = xmpp_message_new(ctx, XMPP_TYPE_GROUPCHAT, group_jid, NULL);
     xmpp_stanza_set_from(msg, xmpp_conn_get_bound_jid(conn));

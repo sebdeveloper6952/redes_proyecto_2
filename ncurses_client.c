@@ -30,6 +30,9 @@ unsigned int curr_msg_count = 0;
 unsigned char p_count = 0;
 char *pres_arr[100] = {};
 
+// group message handling
+unsigned char g_msg_count = 0;
+
 int main(int argc, char *argv[])
 {
     int startx, starty, width, height;
@@ -85,7 +88,7 @@ int main(int argc, char *argv[])
         mvwprintw(w_help, 6, 2, "/active");
         mvwprintw(w_help, 7, 2, "/presence <show> <status>");
         mvwprintw(w_help, 8, 2, "/priv <jid>");
-        mvwprintw(w_help, 9, 2, "/group <room_jid>");
+        mvwprintw(w_help, 9, 2, "/group <room_jid> <nickname>");
         mvwprintw(w_help, 10, 2, "/vcard <jid>");
         mvwprintw(w_help, 11, 2, "/file <path> <jid>");
         mvwprintw(w_help, 12, 2, "/menu");
@@ -217,6 +220,12 @@ int main(int argc, char *argv[])
                     if (tokens[1] != NULL && tokens[2] != NULL)
                     {
                         in_g_chat = 1;
+                        strcpy(curr_chat_jid, tokens[1]);
+                        char title[256] = {};
+                        strcat(title, "GROUP CHAT [");
+                        strcat(title, tokens[1]);
+                        strcat(title, "]");
+                        update_win(w_content, title, "");
                         xmpp_client_join_group_chat(tokens[1], tokens[2]);
                     }
                 }
@@ -236,9 +245,10 @@ int main(int argc, char *argv[])
                     // private chat message
                     xmpp_client_send_msg(1, curr_chat_jid, cmd);
                 }
-                else
+                else if (in_g_chat)
                 {
                     // group chat message
+                    xmpp_client_send_msg(0, curr_chat_jid, cmd);
                 }
             }
 
@@ -350,7 +360,9 @@ void on_msg(const char *jid_from, const char *body)
     }
     else if (in_g_chat)
     {
-        update_win(w_content, "GROUP MSG", body);
+        mvwprintw(w_content, 3 + g_msg_count++, 2, "[%s] %s", jid_from, body);
+        wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+        wrefresh(w_content);
     }
 }
 
