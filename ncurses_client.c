@@ -30,8 +30,8 @@ unsigned int curr_msg_count = 0;
 unsigned char p_count = 0;
 char *pres_arr[100] = {};
 
-// group message handling
-unsigned char g_msg_count = 0;
+// message handling
+unsigned char msg_count = 0;
 
 int main(int argc, char *argv[])
 {
@@ -206,6 +206,7 @@ int main(int argc, char *argv[])
                     if (tokens[1] != NULL)
                     {
                         in_p_chat = 1;
+                        msg_count = 0;
                         strcpy(curr_chat_jid, tokens[1]);
                         char title[256] = {};
                         strcat(title, "PRIVATE CHAT WITH [");
@@ -220,6 +221,7 @@ int main(int argc, char *argv[])
                     if (tokens[1] != NULL && tokens[2] != NULL)
                     {
                         in_g_chat = 1;
+                        msg_count = 0;
                         strcpy(curr_chat_jid, tokens[1]);
                         char title[256] = {};
                         strcat(title, "GROUP CHAT [");
@@ -237,6 +239,8 @@ int main(int argc, char *argv[])
                 {
                     in_p_chat = 0;
                     in_g_chat = 0;
+                    msg_count = 0;
+                    memset(curr_chat_jid, 0, sizeof(curr_chat_jid));
                     update_win(w_content, "MENU", "");
                 }
 
@@ -244,6 +248,9 @@ int main(int argc, char *argv[])
                 {
                     // private chat message
                     xmpp_client_send_msg(1, curr_chat_jid, cmd);
+                    mvwprintw(w_content, 3 + msg_count++, 2, "[YOU] %s", cmd);
+                    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+                    wrefresh(w_content);
                 }
                 else if (in_g_chat)
                 {
@@ -356,11 +363,20 @@ void on_msg(const char *jid_from, const char *body)
 {
     if (in_p_chat)
     {
-        update_win(w_content, "PRIVATE MSG", body);
+        mvwprintw(w_content, 3 + msg_count++, 2, "[%s] %s", jid_from, body);
+        wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+        wrefresh(w_content);
     }
     else if (in_g_chat)
     {
-        mvwprintw(w_content, 3 + g_msg_count++, 2, "[%s] %s", jid_from, body);
+        mvwprintw(w_content, 3 + msg_count++, 2, "[%s] %s", jid_from, body);
+        wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+        wrefresh(w_content);
+    }
+    else
+    {
+        wclear(w_content);
+        mvwprintw(w_content, 1, 2, "NOTIFICATION: NEW MESSAGE from [%s]", jid_from);
         wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
         wrefresh(w_content);
     }

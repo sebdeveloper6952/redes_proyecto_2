@@ -50,6 +50,23 @@ void join_gm_room(xmpp_conn_t *const conn, const char *room_name, const char *ni
     xmpp_stanza_release(p);
 }
 
+void leave_gm_room(xmpp_conn_t *const conn, const char *room)
+{
+    xmpp_ctx_t *ctx;
+    xmpp_stanza_t *st_p;
+    char room_jid[256] = {};
+
+    strcat(room_jid, room);
+    strcat(room_jid, "@conference.redes2020.xyz");
+    ctx = xmpp_conn_get_context(conn);
+    st_p = xmpp_presence_new(ctx);
+    xmpp_stanza_set_type(st_p, "unavailable");
+    xmpp_stanza_set_from(st_p, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(st_p, room_jid);
+    xmpp_send(conn, st_p);
+    xmpp_stanza_release(st_p);
+}
+
 void send_gm_msg(xmpp_conn_t *const conn, const char *jid, const char *body)
 {
     xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
