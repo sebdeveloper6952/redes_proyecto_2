@@ -46,9 +46,6 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // add handler for friend requests
         // xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, NULL);
 
-        // vcard handler
-        // xmpp_id_handler_add(conn, vcard_handler, "vcard_get", NULL);
-
         // private message handler
         // xmpp_handler_add(conn, im_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_CHAT, NULL);
 
@@ -68,12 +65,6 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // testing
         // get_all_users(conn);
         // get_roster(conn, ctx);
-
-        // test v-card get
-        // get_vcard(conn, ctx, "sebdev_gajim@redes2020.xyz");
-
-        // test add friend
-        // send_subscription_request(conn, "asd1234@redes2020.xyz");
 
         // test change presence
         // change_presence(conn, ctx, away, "en clases :(");
@@ -197,6 +188,15 @@ void xmpp_client_add_gm_msg_handler(void(*on_result))
     xmpp_handler_add(conn, gm_msg_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_GROUPCHAT, data);
 }
 
+void xmpp_client_add_vcard_handler(void(*on_result))
+{
+    // attach handler for result
+    my_data *data = new_data();
+    data->cb = on_result;
+    // vcard handler
+    xmpp_id_handler_add(conn, vcard_handler, "vcard_get", data);
+}
+
 void xmpp_client_join_group_chat(const char *group_jid, const char *nick)
 {
     join_gm_room(conn, group_jid, nick);
@@ -217,4 +217,15 @@ void xmpp_client_add_presence_handler(void(*on_result))
     data->msg_cb = on_result;
     // presence handler
     xmpp_handler_add(conn, presence_handler, NULL, XMPP_ST_PRESENCE, NULL, data);
+}
+
+void xmpp_client_add_to_roster(const char *jid)
+{
+    // test add friend
+    send_subscription_request(conn, jid);
+}
+
+void xmpp_client_get_vcard(const char *jid)
+{
+    get_vcard(conn, jid);
 }

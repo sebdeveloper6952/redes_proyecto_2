@@ -11,6 +11,7 @@ void destroy_win(WINDOW *local_win);
 void clear_win(WINDOW *w);
 void update_win(WINDOW *w, const char *title, const char *content);
 void clear_prompt();
+void *thread_work(void *data);
 void on_login();
 void on_users_result(const char *roster);
 void on_roster_result(const char *roster);
@@ -18,7 +19,7 @@ void on_my_presence_result(const char *new_presence);
 void on_presence(const char *jid, const char *st);
 void on_msg(const char *jid_from, const char *body);
 void show_saved_presences(void);
-void *thread_work(void *data);
+void on_vcard_result(const char *);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
@@ -138,11 +139,10 @@ int main(int argc, char *argv[])
                 {
                     in_p_chat = 0;
                     in_g_chat = 0;
-                    update_win(w_content, "MENU", "");
+                    update_win(w_content, "\tMENU", "");
                 }
-
                 // command usage help
-                if (strcmp(tokens[0], "/help") == 0)
+                else if (strcmp(tokens[0], "/help") == 0)
                 {
                     if (strcmp(tokens[1], "users") == 0)
                     {
@@ -153,23 +153,27 @@ int main(int argc, char *argv[])
                             " - description: shows all users that have an account on the server");
                     }
                 }
-
-                if (strcmp(tokens[0], "/users") == 0)
+                else if (strcmp(tokens[0], "/users") == 0)
                 {
                     xmpp_client_get_users(on_users_result);
                 }
-
-                if (strcmp(tokens[0], "/roster") == 0)
+                else if (strcmp(tokens[0], "/roster") == 0)
                 {
-                    xmpp_client_get_roster(on_roster_result);
+                    if (tokens[1] == NULL)
+                    {
+                        xmpp_client_get_roster(on_roster_result);
+                    }
+                    else if (strcmp(tokens[1], "add") == 0 && tokens[2] != NULL)
+                    {
+                        xmpp_client_add_to_roster(tokens[2]);
+                        update_win(w_content, "\tFRIEND REQUEST SENT!", "");
+                    }
                 }
-
-                if (strcmp(tokens[0], "/active") == 0)
+                else if (strcmp(tokens[0], "/active") == 0)
                 {
                     show_saved_presences();
                 }
-
-                if (strcmp(tokens[0], "/presence") == 0)
+                else if (strcmp(tokens[0], "/presence") == 0)
                 {
                     if (tokens[1] != NULL)
                     {
@@ -200,8 +204,7 @@ int main(int argc, char *argv[])
                             on_my_presence_result);
                     }
                 }
-
-                if (strcmp(tokens[0], "/priv") == 0)
+                else if (strcmp(tokens[0], "/priv") == 0)
                 {
                     if (tokens[1] != NULL)
                     {
@@ -215,8 +218,7 @@ int main(int argc, char *argv[])
                         update_win(w_content, title, "");
                     }
                 }
-
-                if (strcmp(tokens[0], "/group") == 0)
+                else if (strcmp(tokens[0], "/group") == 0)
                 {
                     if (tokens[1] != NULL && tokens[2] != NULL)
                     {
@@ -230,6 +232,11 @@ int main(int argc, char *argv[])
                         update_win(w_content, title, "");
                         xmpp_client_join_group_chat(tokens[1], tokens[2]);
                     }
+                }
+                else if (strcmp(tokens[0], "/vcard") == 0 && tokens[1] != NULL)
+                {
+                    update_win(w_content, "GETTING VCARD", "Please wait...");
+                    xmpp_client_get_vcard(tokens[1]);
                 }
             }
             // if in private or group chat
@@ -329,6 +336,7 @@ void on_login()
     xmpp_client_add_presence_handler(on_presence);
     xmpp_client_add_priv_msg_handler(on_msg);
     xmpp_client_add_gm_msg_handler(on_msg);
+    xmpp_client_add_vcard_handler(on_vcard_result);
 }
 
 void on_users_result(const char *roster)
@@ -376,7 +384,7 @@ void on_msg(const char *jid_from, const char *body)
     else
     {
         wclear(w_content);
-        mvwprintw(w_content, 1, 2, "NOTIFICATION: NEW MESSAGE from [%s]", jid_from);
+        mvwprintw(w_content, 1, 2, "NOTIFICATION: NEW MESSAGE from [%s] %s", jid_from, body);
         wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
         wrefresh(w_content);
     }
@@ -405,4 +413,9 @@ void show_saved_presences(void)
 
     wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
     wrefresh(w_content);
+}
+
+void on_vcard_result(const char *vcard)
+{
+    update_win(w_content, "VCARD RESULT", vcard);
 }

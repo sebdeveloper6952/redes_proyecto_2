@@ -1,18 +1,22 @@
 #include <strophe.h>
 #include <stdio.h>
-#include "xmpp_vcard.h"
 #include <string.h>
+#include "xmpp_vcard.h"
+#include "xmpp_utils.h"
 
-int vcard_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const data)
+int vcard_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const userdata)
 {
     xmpp_stanza_t *vcard, *temp;
-    char contact[1024];
+    my_data *data;
+    char contact[1024] = {};
     char *text;
 
+    data = (my_data *)userdata;
     vcard = xmpp_stanza_get_child_by_name(stanza, "vCard");
     if (!vcard)
     {
-        fprintf(stderr, "DEBUG: no vCard was found!\n");
+        if (data && data->cb)
+            data->cb("No vCard was found!");
         return 1;
     }
 
@@ -48,12 +52,13 @@ int vcard_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *co
         strcat(contact, "\n");
     }
     strcat(contact, "***********************\n");
-    fprintf(stderr, "%s", contact);
+    if (data && data->cb)
+        data->cb(contact);
 
     return 1;
 }
 
-void get_vcard(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx, const char *jid)
+void get_vcard(xmpp_conn_t *const conn, const char *jid)
 {
     xmpp_send_raw_string(
         conn,
