@@ -12,8 +12,16 @@ void destroy_win(WINDOW *local_win);
 void clear_win(WINDOW *w);
 void update_win(WINDOW *w, const char *title, const char *content);
 void clear_prompt();
-void *thread_work(void *data);
 void show_saved_presences(void);
+
+// worker thread
+struct thread_data
+{
+    char username[64];
+    char password[64];
+};
+void *thread_work(void *data);
+
 // callbacks
 void on_login();
 void on_users_result(const char *roster);
@@ -23,11 +31,12 @@ void on_presence(const char *jid, const char *st);
 void on_msg(const char *jid_from, const char *body);
 void on_vcard_result(const char *);
 void on_register_result(const char *);
+void on_delete_account(const char *);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
 char curr_chat_jid[256] = {};
-char in_p_chat = 0, in_g_chat = 0;
+char in_p_chat = 0, in_g_chat = 0, account_was_deleted = 0;
 unsigned int curr_msg_count = 0;
 
 // presence handling
@@ -39,7 +48,6 @@ unsigned char msg_count = 0;
 
 int main(int argc, char *argv[])
 {
-    int startx, starty, width, height;
     int ch;
 
     // init
@@ -52,10 +60,9 @@ int main(int argc, char *argv[])
 
     // menu
     mvprintw(LINES / 2, COLS / 2 - 5, "HackerChat");
-    mvprintw(LINES / 2 + 2, COLS / 2 - 10, "1 - Login");
-    mvprintw(LINES / 2 + 3, COLS / 2 - 10, "2 - Crear cuenta");
-    mvprintw(LINES / 2 + 4, COLS / 2 - 10, "3 - Eliminar cuenta");
-    mvprintw(LINES - 1, 0, "Ingresa tu opcion: ");
+    mvprintw(LINES / 2 + 2, COLS / 2 - 10, "1 - LOGIN");
+    mvprintw(LINES / 2 + 3, COLS / 2 - 10, "2 - CREATE ACCOUNT");
+    mvprintw(LINES - 1, 0, "ENTER OPTION: ");
     ch = getch();
     clear();
     refresh();
@@ -63,10 +70,9 @@ int main(int argc, char *argv[])
     while (ch != '1' && ch != '2' && ch != '3')
     {
         mvprintw(LINES / 2, COLS / 2 - 5, "HackerChat");
-        mvprintw(LINES / 2 + 2, COLS / 2 - 10, "1 - Login");
-        mvprintw(LINES / 2 + 3, COLS / 2 - 10, "2 - Crear cuenta");
-        mvprintw(LINES / 2 + 4, COLS / 2 - 10, "3 - Eliminar cuenta");
-        mvprintw(LINES - 1, 0, "Ingresa tu opcion: ");
+        mvprintw(LINES / 2 + 2, COLS / 2 - 10, "1 - LOGIN");
+        mvprintw(LINES / 2 + 3, COLS / 2 - 10, "2 - CREATE ACCOUNT");
+        mvprintw(LINES - 1, 0, "ENTER OPTION: ");
         ch = getch();
         clear();
         refresh();
@@ -74,13 +80,25 @@ int main(int argc, char *argv[])
 
     if (ch == '1')
     {
-        height = 3;
-        width = COLS - 10;
-        starty = 0;
-        startx = 5;
-        w_title = create_newwin(height, width, starty, startx);
+        char username[64];
+        char password[64];
+        char ch;
+
+        mvprintw(LINES / 2, COLS / 2 - 5, "USERNAME: ");
+        mvprintw(LINES / 2 + 1, COLS / 2 - 5, "PASSWORD: ");
+        move(LINES / 2, COLS / 2 + 5);
+        getstr(username);
+        move(LINES / 2 + 1, COLS / 2 + 5);
+        noecho();
+        getstr(password);
+        clear();
+
+        // reactivate character echoing
+        echo();
+
+        w_title = create_newwin(3, COLS - 10, 0, 5);
         wbkgd(w_title, COLOR_PAIR(1));
-        mvwprintw(w_title, 1, COLS / 2 - 2, "Logging in, please wait...");
+        mvwprintw(w_title, 1, COLS / 2 - 2, "LOGGING IN, PLEASE WAIT...");
         wrefresh(w_title);
 
         w_help = create_newwin(LINES - 3, 30, 3, 5);
@@ -90,13 +108,14 @@ int main(int argc, char *argv[])
         mvwprintw(w_help, 4, 2, "/users");
         mvwprintw(w_help, 5, 2, "/roster [add <jid>]");
         mvwprintw(w_help, 6, 2, "/active");
-        mvwprintw(w_help, 7, 2, "/presence <show> <status>");
+        mvwprintw(w_help, 7, 2, "/presence <show> [status]");
         mvwprintw(w_help, 8, 2, "/priv <jid>");
         mvwprintw(w_help, 9, 2, "/group <room_jid> <nickname>");
         mvwprintw(w_help, 10, 2, "/vcard <jid>");
         mvwprintw(w_help, 11, 2, "/file <path> <jid>");
         mvwprintw(w_help, 12, 2, "/menu");
-        mvwprintw(w_help, 13, 2, "/quit");
+        mvwprintw(w_help, 13, 2, "/delete");
+        mvwprintw(w_help, 14, 2, "/quit");
         wrefresh(w_help);
 
         w_content = create_newwin(LINES - 5, COLS - 40, 3, 35);
@@ -110,22 +129,30 @@ int main(int argc, char *argv[])
         wrefresh(w_prompt);
 
         // start the xmpp client
-        pthread_create(&worker_thread, NULL, thread_work, NULL);
+        struct thread_data td;
+        strcpy(td.username, username);
+        strcpy(td.password, password);
+        pthread_create(&worker_thread, NULL, thread_work, &td);
 
         // ask for command, clear and redraw the prompt
         char cmd[256];
-        char *tokens[10];
+        char *tokens[10] = {};
         char *o_cmd, *token;
         int i = 0;
 
         wgetstr(w_prompt, cmd);
         clear_prompt();
 
+        // command read and evaluate loop
         while (1)
         {
             // if not in chat
             if (in_p_chat == 0 && in_g_chat == 0)
             {
+                // if account was deleted
+                if (account_was_deleted)
+                    break;
+
                 // split command
                 o_cmd = strdup(cmd);
                 while ((token = strsep(&o_cmd, " ")) != NULL)
@@ -181,7 +208,7 @@ int main(int argc, char *argv[])
                     if (tokens[1] != NULL)
                     {
                         status_t st;
-                        char status[256] = {};
+                        char status[256] = {" "};
 
                         if (strcmp(tokens[1], "away") == 0)
                             st = away;
@@ -241,6 +268,11 @@ int main(int argc, char *argv[])
                     update_win(w_content, "GETTING VCARD", "Please wait...");
                     xmpp_client_get_vcard(tokens[1]);
                 }
+                else if (strcmp(tokens[0], "/delete") == 0)
+                {
+                    update_win(w_content, "DELETING ACCOUNT", "Please wait...");
+                    xmpp_client_delete_account(on_delete_account);
+                }
             }
             // if in private or group chat
             else
@@ -274,11 +306,14 @@ int main(int argc, char *argv[])
                 tokens[i] = NULL;
             i = 0;
 
-            wgetstr(w_prompt, cmd);
-            wclear(w_prompt);
-            wborder(w_prompt, '|', '|', '-', '-', '*', '*', '*', '*');
-            mvwprintw(w_prompt, 1, 1, "COMMAND: ");
-            wrefresh(w_prompt);
+            if (!account_was_deleted)
+            {
+                wgetstr(w_prompt, cmd);
+                wclear(w_prompt);
+                wborder(w_prompt, '|', '|', '-', '-', '*', '*', '*', '*');
+                mvwprintw(w_prompt, 1, 1, "COMMAND: ");
+                wrefresh(w_prompt);
+            }
         }
     }
     else if (ch == '2')
@@ -310,17 +345,16 @@ int main(int argc, char *argv[])
         if (ch == KEY_ENTER || ch == 10)
         {
             mvprintw(LINES / 2, COLS / 2 - 10, "CREATING ACCOUNT...");
+            refresh();
             xmpp_client_register_account(username, email, fullname, password, on_register_result);
         }
         else
         {
-            mvprintw(LINES / 2, COLS / 2 - 10, "ACCOUNT CREATION CANCELLED.");
+            mvprintw(LINES / 2, COLS / 2 - 10, "ACCOUNT CREATION CANCELED.");
         }
 
         getch();
     }
-    // else if (ch == '3')
-    // {}
 
     // release resources
     pthread_cancel(worker_thread);
@@ -342,7 +376,8 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
 
 void *thread_work(void *data)
 {
-    xmpp_login("a", "a", on_login);
+    struct thread_data *td = (struct thread_data *)data;
+    xmpp_login(td->username, td->password, on_login);
 }
 
 void update_win(WINDOW *w, const char *title, const char *content)
@@ -373,7 +408,7 @@ void on_login()
 {
     wclear(w_title);
     wborder(w_title, '|', '|', '-', '-', '*', '*', '*', '*');
-    mvwprintw(w_title, 1, COLS / 2 - 2, "sebdev@redes2020.xyz []");
+    mvwprintw(w_title, 1, COLS / 2 - 2, "LOGGED IN! []");
     wrefresh(w_title);
     // xmpp client handlers
     xmpp_client_add_presence_handler(on_presence);
@@ -405,7 +440,7 @@ void on_roster_result(const char *roster)
 void on_my_presence_result(const char *new_presence)
 {
     wclear(w_title);
-    mvwprintw(w_title, 1, COLS / 2 - 2, "sebdev@redes2020.xyz [%s]", new_presence);
+    mvwprintw(w_title, 1, COLS / 2 - 2, "LOGGED IN [%s]", new_presence);
     wborder(w_title, '|', '|', '-', '-', '*', '*', '*', '*');
     wrefresh(w_title);
 }
@@ -466,4 +501,14 @@ void on_vcard_result(const char *vcard)
 void on_register_result(const char *result)
 {
     update_win(w_content, "REGISTER RESULT", result);
+    clear();
+    mvprintw(LINES / 2, COLS / 2, "REGISTER RESULT");
+    mvprintw(LINES / 2, COLS / 2 - 20, result);
+    refresh();
+}
+
+void on_delete_account(const char *result)
+{
+    account_was_deleted = 1;
+    update_win(w_content, "DELETE ACCOUNT RESULT", result);
 }

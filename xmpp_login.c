@@ -90,6 +90,7 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
     xmpp_ctx_t *ctx;
     xmpp_log_t *log;
     long flags = XMPP_CONN_FLAG_TRUST_TLS;
+    char full_jid[256];
 
     // initialize library
     xmpp_initialize();
@@ -107,8 +108,11 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
     // set jid and password for authentication
     // xmpp_conn_set_jid(conn, jid);
     // xmpp_conn_set_pass(conn, pass);
-    xmpp_conn_set_jid(conn, "sebdev@redes2020.xyz");
-    xmpp_conn_set_pass(conn, "sebasxmpp0985");
+
+    strcat(full_jid, jid);
+    strcat(full_jid, "@redes2020.xyz");
+    xmpp_conn_set_jid(conn, full_jid);
+    xmpp_conn_set_pass(conn, pass);
 
     // connect to server
     my_data *data = new_data();
@@ -218,4 +222,9 @@ void xmpp_client_add_to_roster(const char *jid)
 void xmpp_client_get_vcard(const char *jid)
 {
     get_vcard(conn, jid);
+}
+
+void xmpp_client_delete_account(void(*on_result))
+{
+    delete_account(conn, on_result);
 }
