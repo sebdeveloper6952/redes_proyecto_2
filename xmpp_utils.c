@@ -15,6 +15,16 @@ xmpp_reg_t *reg_new(void)
     return reg;
 }
 
+my_data *new_data()
+{
+    my_data *data;
+    data = malloc(sizeof(*data));
+    if (data != NULL)
+        memset(data, 0, sizeof(*data));
+
+    return data;
+}
+
 void print_menu()
 {
     printf("****************************\n");

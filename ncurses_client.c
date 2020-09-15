@@ -4,6 +4,7 @@
 #include <string.h>
 #include <strophe.h>
 #include "xmpp_login.h"
+#include "xmpp_register.h"
 #include "xmpp_roster.h"
 
 WINDOW *create_newwin(int height, int width, int starty, int startx);
@@ -12,14 +13,16 @@ void clear_win(WINDOW *w);
 void update_win(WINDOW *w, const char *title, const char *content);
 void clear_prompt();
 void *thread_work(void *data);
+void show_saved_presences(void);
+// callbacks
 void on_login();
 void on_users_result(const char *roster);
 void on_roster_result(const char *roster);
 void on_my_presence_result(const char *new_presence);
 void on_presence(const char *jid, const char *st);
 void on_msg(const char *jid_from, const char *body);
-void show_saved_presences(void);
 void on_vcard_result(const char *);
+void on_register_result(const char *);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
@@ -278,6 +281,46 @@ int main(int argc, char *argv[])
             wrefresh(w_prompt);
         }
     }
+    else if (ch == '2')
+    {
+        char username[64];
+        char email[64];
+        char fullname[64];
+        char password[64];
+        char ch;
+
+        mvprintw(LINES / 2, COLS / 2 - 5, "USERNAME: ");
+        mvprintw(LINES / 2 + 1, COLS / 2 - 5, "EMAIL: ");
+        mvprintw(LINES / 2 + 2, COLS / 2 - 5, "FULLNAME: ");
+        mvprintw(LINES / 2 + 3, COLS / 2 - 5, "PASSWORD: ");
+        move(LINES / 2, COLS / 2 + 5);
+        getstr(username);
+        move(LINES / 2 + 1, COLS / 2 + 2);
+        getstr(email);
+        move(LINES / 2 + 2, COLS / 2 + 5);
+        getstr(fullname);
+        move(LINES / 2 + 3, COLS / 2 + 5);
+        noecho();
+        getstr(password);
+        mvprintw(LINES / 2 + 5, COLS / 2 - 28, "PRESS ENTER TO CREATE ACCOUNT OR ANY OTHER KEY TO CANCEL");
+
+        keypad(stdscr, TRUE);
+        ch = getch();
+        clear();
+        if (ch == KEY_ENTER || ch == 10)
+        {
+            mvprintw(LINES / 2, COLS / 2 - 10, "CREATING ACCOUNT...");
+            xmpp_client_register_account(username, email, fullname, password, on_register_result);
+        }
+        else
+        {
+            mvprintw(LINES / 2, COLS / 2 - 10, "ACCOUNT CREATION CANCELLED.");
+        }
+
+        getch();
+    }
+    // else if (ch == '3')
+    // {}
 
     // release resources
     pthread_cancel(worker_thread);
@@ -418,4 +461,9 @@ void show_saved_presences(void)
 void on_vcard_result(const char *vcard)
 {
     update_win(w_content, "VCARD RESULT", vcard);
+}
+
+void on_register_result(const char *result)
+{
+    update_win(w_content, "REGISTER RESULT", result);
 }

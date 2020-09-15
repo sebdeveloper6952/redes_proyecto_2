@@ -24,6 +24,7 @@ typedef struct
     void (*msg_cb)(const char *jid, const char *body);
 } my_data;
 
+my_data *new_data();
 void print_menu();
 void get_jid_and_pass(char *jid, char *pass);
 #endif

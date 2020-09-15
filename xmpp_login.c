@@ -16,16 +16,6 @@
 // global connection
 static xmpp_conn_t *conn;
 
-my_data *new_data()
-{
-    my_data *data;
-    data = malloc(sizeof(*data));
-    if (data != NULL)
-        memset(data, 0, sizeof(*data));
-
-    return data;
-}
-
 void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         const xmpp_conn_event_t status,
                         const int error,
