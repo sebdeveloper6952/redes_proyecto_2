@@ -17,3 +17,4 @@ void xmpp_client_add_presence_handler(void(*on_result));
 void xmpp_client_get_vcard(const char *jid);
 void xmpp_client_add_vcard_handler(void(*on_result));
 void xmpp_client_delete_account(void(*on_result));
+void xmpp_client_add_subscription_handler(void(*on_result));

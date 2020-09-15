@@ -61,6 +61,7 @@ int presence_subscription_handler(
     xmpp_stanza_t *const stanza,
     void *const userdata)
 {
+    my_data *data = (my_data *)userdata;
     xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     const char *jid = xmpp_conn_get_bound_jid(conn);
     const char *name = xmpp_stanza_get_name(stanza);
@@ -70,13 +71,20 @@ int presence_subscription_handler(
     if (type && strcmp(type, "subscribe") == 0)
     {
         const char *from = xmpp_stanza_get_from(stanza);
-        fprintf(stderr, "DEBUG: '%s' wants to be my friend!\n", from);
         xmpp_stanza_t *subscribed = xmpp_presence_new(ctx);
         xmpp_stanza_set_from(subscribed, jid);
         xmpp_stanza_set_to(subscribed, from);
         xmpp_stanza_set_type(subscribed, "subscribed");
         xmpp_send(conn, subscribed);
         xmpp_stanza_release(subscribed);
+
+        if (data && data->cb)
+        {
+            char result[256] = {};
+            strcat(result, from);
+            strcat(result, " SENT A FRIEND REQUEST, AUTOMATICALLY ACCEPTED");
+            data->cb(result);
+        }
     }
 
     return 1;

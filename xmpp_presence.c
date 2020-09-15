@@ -66,9 +66,12 @@ int my_presence_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, vo
 }
 
 // Sends a <presence/> stanza to indicate we are available.
-void send_logged_in_presence(xmpp_conn_t *const conn, xmpp_ctx_t *const ctx)
+void send_logged_in_presence(xmpp_conn_t *const conn)
 {
+    xmpp_ctx_t *ctx;
     xmpp_stanza_t *presence, *status, *text;
+
+    ctx = xmpp_conn_get_context(conn);
     presence = xmpp_presence_new(ctx);
     status = xmpp_stanza_new(ctx);
     text = xmpp_stanza_new(ctx);

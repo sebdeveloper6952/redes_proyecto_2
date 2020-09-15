@@ -33,20 +33,11 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // fprintf(stderr, "DEBUG: connection is %s.\n",
         //         secured ? "secured" : "NOT secured");
 
-        // add handler for friend requests
-        // xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, NULL);
-
-        // private message handler
-        // xmpp_handler_add(conn, im_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_CHAT, NULL);
-
-        // group chat message handler
-        // xmpp_handler_add(conn, gm_msg_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_GROUPCHAT, NULL);
-
         // file transfer init handler
         // xmpp_handler_add(conn, file_transfer_init_handler, NULL, "iq", "set", NULL);
 
         // send the presence stanza to show available status
-        send_logged_in_presence(conn, data->ctx);
+        send_logged_in_presence(conn);
 
         // login callback passed externally
         if (data->cb != NULL)
@@ -227,4 +218,13 @@ void xmpp_client_get_vcard(const char *jid)
 void xmpp_client_delete_account(void(*on_result))
 {
     delete_account(conn, on_result);
+}
+
+void xmpp_client_add_subscription_handler(void(*on_result))
+{
+    // attach handler for result
+    my_data *data = new_data();
+    data->cb = on_result;
+    // add handler for friend requests
+    xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, data);
 }

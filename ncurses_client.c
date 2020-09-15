@@ -32,6 +32,7 @@ void on_msg(const char *jid_from, const char *body);
 void on_vcard_result(const char *);
 void on_register_result(const char *);
 void on_delete_account(const char *);
+void on_subscription_request();
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
@@ -412,6 +413,7 @@ void on_login()
     wrefresh(w_title);
     // xmpp client handlers
     xmpp_client_add_presence_handler(on_presence);
+    xmpp_client_add_subscription_handler(on_subscription_request);
     xmpp_client_add_priv_msg_handler(on_msg);
     xmpp_client_add_gm_msg_handler(on_msg);
     xmpp_client_add_vcard_handler(on_vcard_result);
@@ -462,7 +464,7 @@ void on_msg(const char *jid_from, const char *body)
     else
     {
         wclear(w_content);
-        mvwprintw(w_content, 1, 2, "NOTIFICATION: NEW MESSAGE from [%s] %s", jid_from, body);
+        mvwprintw(w_content, 1, 2, "[NOTIFICATION]: NEW MESSAGE from [%s] %s", jid_from, body);
         wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
         wrefresh(w_content);
     }
@@ -511,4 +513,12 @@ void on_delete_account(const char *result)
 {
     account_was_deleted = 1;
     update_win(w_content, "DELETE ACCOUNT RESULT", result);
+}
+
+void on_subscription_request(const char *subscription)
+{
+    wclear(w_content);
+    mvwprintw(w_content, 1, 2, "[NOTIFICATION]: %s", subscription);
+    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_content);
 }
