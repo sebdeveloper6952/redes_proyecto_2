@@ -12,6 +12,7 @@ int xmpp_bob_img_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stan
     char *encoded;
     unsigned char *decoded;
     const char *path;
+    char cb_msg[256] = {};
     size_t dec_len;
 
     ctx = xmpp_conn_get_context(conn);
@@ -25,7 +26,7 @@ int xmpp_bob_img_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stan
 
         xmpp_base64_decode_bin(ctx, encoded, strlen(encoded), &decoded, &dec_len);
         path = xmpp_stanza_get_id(stanza);
-        if ((file_d = fopen("new.png", "w")) != NULL)
+        if ((file_d = fopen(path, "w")) != NULL)
         {
             if (fwrite(decoded, 1, dec_len, file_d) < dec_len)
             {
@@ -37,7 +38,9 @@ int xmpp_bob_img_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stan
         }
 
         // callback
-        data->cb(xmpp_stanza_get_id(stanza));
+        strcat(cb_msg, "File was saved at the current directory as: ");
+        strcat(cb_msg, path);
+        data->cb(cb_msg);
 
         // release resources
         fclose(file_d);
@@ -103,7 +106,7 @@ void xmpp_bob_send_image(
     xmpp_stanza_release(st_msg);
 
     // callback
-    data->cb("Image sent!");
+    data->cb("File sent!");
 
     // release mem
     xmpp_free(ctx, encoded);
