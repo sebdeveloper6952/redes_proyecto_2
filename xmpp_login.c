@@ -11,7 +11,7 @@
 #include "xmpp_vcard.h"
 #include "xmpp_im.h"
 #include "xmpp_gm.h"
-#include "xmpp_file_transfer.h"
+#include "xmpp_bob.h"
 
 // global connection
 static xmpp_conn_t *conn;
@@ -33,25 +33,12 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         // fprintf(stderr, "DEBUG: connection is %s.\n",
         //         secured ? "secured" : "NOT secured");
 
-        // file transfer init handler
-        // xmpp_handler_add(conn, file_transfer_init_handler, NULL, "iq", "set", NULL);
-
         // send the presence stanza to show available status
         send_logged_in_presence(conn);
 
         // login callback passed externally
-        if (data->cb != NULL)
+        if (data != NULL && data->cb != NULL)
             data->cb(NULL);
-
-        // testing
-        // get_all_users(conn);
-        // get_roster(conn, ctx);
-
-        // test change presence
-        // change_presence(conn, ctx, away, "en clases :(");
-
-        // test send private message
-        // send_im_msg(conn, "javi@redes2020.xyz", "ola amigo, buenas noches!");
 
         // join or create group
         // join_gm_room(conn, "f1", "checo_perez");
@@ -92,7 +79,7 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
     ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
 
-    // set flag to trust TLS cert
+    // set flag to keepalive tcp connection and trust TLS cert
     xmpp_conn_set_keepalive(conn, 60, 30);
     xmpp_conn_set_flags(conn, flags);
 
@@ -227,4 +214,18 @@ void xmpp_client_add_subscription_handler(void(*on_result))
     data->cb = on_result;
     // add handler for friend requests
     xmpp_handler_add(conn, presence_subscription_handler, NULL, XMPP_ST_PRESENCE, XMPP_TYPE_SUBSCRIBE, data);
+}
+
+void xmpp_client_add_img_recv_handler(void(*on_result))
+{
+    my_data *data = new_data();
+    data->cb = on_result;
+    xmpp_handler_add(conn, xmpp_bob_img_recv_handler, NULL, "message", "normal", data);
+}
+
+void xmpp_client_send_img(const char *jid_to, const char *path, void(*on_result))
+{
+    my_data *data = new_data();
+    data->cb = on_result;
+    xmpp_bob_send_image(conn, jid_to, path, data);
 }

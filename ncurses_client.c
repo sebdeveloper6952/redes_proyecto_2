@@ -29,10 +29,14 @@ void on_roster_result(const char *roster);
 void on_my_presence_result(const char *new_presence);
 void on_presence(const char *jid, const char *st);
 void on_msg(const char *jid_from, const char *body);
-void on_vcard_result(const char *);
-void on_register_result(const char *);
-void on_delete_account(const char *);
-void on_subscription_request();
+void on_vcard_result(const char *result);
+void on_register_result(const char *result);
+void on_delete_account(const char *result);
+void on_subscription_request(const char *result);
+void on_file_recv_init(const char *from, const char *msg);
+void on_file_streamhost_recv(const char *from, const char *msg);
+void on_image_sent_result(const char *result);
+void on_img_recv(const char *result);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
@@ -46,6 +50,9 @@ char *pres_arr[100] = {};
 
 // message handling
 unsigned char msg_count = 0;
+
+// file transfer
+unsigned char fmsg_count = 0;
 
 int main(int argc, char *argv[])
 {
@@ -274,6 +281,17 @@ int main(int argc, char *argv[])
                     update_win(w_content, "DELETING ACCOUNT", "Please wait...");
                     xmpp_client_delete_account(on_delete_account);
                 }
+                else if (strcmp(tokens[0], "/file") == 0)
+                {
+                    if (tokens[1] != NULL && tokens[2] != NULL)
+                    {
+                        update_win(w_content, "SENDING IMAGE", "\tplease wait...");
+                        xmpp_client_send_img(
+                            tokens[2],
+                            tokens[1],
+                            on_image_sent_result);
+                    }
+                }
             }
             // if in private or group chat
             else
@@ -417,6 +435,7 @@ void on_login()
     xmpp_client_add_priv_msg_handler(on_msg);
     xmpp_client_add_gm_msg_handler(on_msg);
     xmpp_client_add_vcard_handler(on_vcard_result);
+    xmpp_client_add_img_recv_handler(on_img_recv);
 }
 
 void on_users_result(const char *roster)
@@ -521,4 +540,42 @@ void on_subscription_request(const char *subscription)
     mvwprintw(w_content, 1, 2, "[NOTIFICATION]: %s", subscription);
     wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
     wrefresh(w_content);
+}
+
+void on_file_recv_init(const char *from, const char *msg)
+{
+    fmsg_count = 1;
+    wclear(w_content);
+    mvwprintw(
+        w_content,
+        fmsg_count++,
+        2,
+        "[FILE TRANSFER]: [%s] wants to send you a file: (%s)",
+        from,
+        msg);
+    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_content);
+}
+
+void on_file_streamhost_recv(const char *from, const char *msg)
+{
+    fmsg_count += 2;
+    mvwprintw(
+        w_content,
+        fmsg_count,
+        2,
+        "[FILE TRANSFER]: [%s] offers the following streamhosts:\n\t%s",
+        from,
+        msg);
+    wrefresh(w_content);
+}
+
+void on_image_sent_result(const char *result)
+{
+    update_win(w_content, "IMAGE SENT", result);
+}
+
+void on_img_recv(const char *result)
+{
+    update_win(w_content, "IMAGE RECEIVED", result);
 }
