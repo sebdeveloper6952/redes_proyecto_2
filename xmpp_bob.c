@@ -4,7 +4,10 @@
 #include <string.h>
 #include "xmpp_utils.h"
 
-int xmpp_bob_img_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const userdata)
+int xmpp_bob_img_recv_handler(
+    xmpp_conn_t *const conn,
+    xmpp_stanza_t *const stanza,
+    void *const userdata)
 {
     my_data *data;
     xmpp_ctx_t *ctx;

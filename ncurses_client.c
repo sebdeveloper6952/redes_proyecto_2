@@ -13,10 +13,12 @@ void clear_win(WINDOW *w);
 void update_win(WINDOW *w, const char *title, const char *content);
 void clear_prompt();
 void show_saved_presences(void);
+void print_title(WINDOW *window, int row, int col);
 
 // worker thread
 struct thread_data
 {
+    char host[64];
     char username[64];
     char password[64];
 };
@@ -67,7 +69,7 @@ int main(int argc, char *argv[])
     keypad(stdscr, TRUE);
 
     // menu
-    mvprintw(LINES / 2, COLS / 2 - 5, "HackerChat");
+    print_title(stdscr, LINES / 2 - 10, COLS / 2 - 30);
     mvprintw(LINES / 2 + 2, COLS / 2 - 10, "1 - LOGIN");
     mvprintw(LINES / 2 + 3, COLS / 2 - 10, "2 - CREATE ACCOUNT");
     mvprintw(LINES - 1, 0, "ENTER OPTION: ");
@@ -77,7 +79,7 @@ int main(int argc, char *argv[])
 
     while (ch != '1' && ch != '2' && ch != '3')
     {
-        mvprintw(LINES / 2, COLS / 2 - 5, "HackerChat");
+        print_title(stdscr, LINES / 2 - 10, COLS / 2 - 30);
         mvprintw(LINES / 2 + 2, COLS / 2 - 10, "1 - LOGIN");
         mvprintw(LINES / 2 + 3, COLS / 2 - 10, "2 - CREATE ACCOUNT");
         mvprintw(LINES - 1, 0, "ENTER OPTION: ");
@@ -88,15 +90,20 @@ int main(int argc, char *argv[])
 
     if (ch == '1')
     {
+        char host[64];
         char username[64];
         char password[64];
         char ch;
 
-        mvprintw(LINES / 2, COLS / 2 - 5, "USERNAME: ");
-        mvprintw(LINES / 2 + 1, COLS / 2 - 5, "PASSWORD: ");
-        move(LINES / 2, COLS / 2 + 5);
-        getstr(username);
+        print_title(stdscr, LINES / 2 - 10, COLS / 2 - 30);
+        mvprintw(LINES / 2, COLS / 2 - 5, "HOST: ");
+        mvprintw(LINES / 2 + 1, COLS / 2 - 5, "USERNAME: ");
+        mvprintw(LINES / 2 + 2, COLS / 2 - 5, "PASSWORD: ");
+        move(LINES / 2, COLS / 2 + 1);
+        getstr(host);
         move(LINES / 2 + 1, COLS / 2 + 5);
+        getstr(username);
+        move(LINES / 2 + 2, COLS / 2 + 5);
         noecho();
         getstr(password);
         clear();
@@ -118,7 +125,7 @@ int main(int argc, char *argv[])
         mvwprintw(w_help, 6, 2, "/active");
         mvwprintw(w_help, 7, 2, "/presence <show> [status]");
         mvwprintw(w_help, 8, 2, "/priv <jid>");
-        mvwprintw(w_help, 9, 2, "/group <room_jid> <nickname>");
+        mvwprintw(w_help, 9, 2, "/group <room_jid> <nick>");
         mvwprintw(w_help, 10, 2, "/vcard <jid>");
         mvwprintw(w_help, 11, 2, "/file <path> <jid>");
         mvwprintw(w_help, 12, 2, "/menu");
@@ -128,8 +135,10 @@ int main(int argc, char *argv[])
 
         w_content = create_newwin(LINES - 5, COLS - 40, 3, 35);
         wbkgd(w_content, COLOR_PAIR(1));
-        mvwprintw(w_content, 1, 1, "MENU");
-        wrefresh(w_content);
+        mvwprintw(w_content, 10, 1, "\tWelcome!");
+        mvwprintw(w_content, 11, 1, "\tBrowse the commands and enter /help <command>"
+                                    " to find more info about the command.");
+        print_title(w_content, 2, 2);
 
         w_prompt = create_newwin(3, COLS - 40, LINES - 3, 35);
         wbkgd(w_prompt, COLOR_PAIR(1));
@@ -138,6 +147,7 @@ int main(int argc, char *argv[])
 
         // start the xmpp client
         struct thread_data td;
+        strcpy(td.host, host);
         strcpy(td.username, username);
         strcpy(td.password, password);
         pthread_create(&worker_thread, NULL, thread_work, &td);
@@ -177,18 +187,113 @@ int main(int argc, char *argv[])
                 {
                     in_p_chat = 0;
                     in_g_chat = 0;
-                    update_win(w_content, "\tMENU", "");
+                    wclear(w_content);
+                    print_title(w_content, 2, 2);
+                    mvwprintw(w_content, 10, 1, "\tWelcome!");
+                    mvwprintw(w_content, 11, 1, "\tBrowse the commands and enter /help <command>"
+                                                " to find more info about the command.");
+                    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+                    wrefresh(w_content);
                 }
                 // command usage help
                 else if (strcmp(tokens[0], "/help") == 0)
                 {
+                    if (tokens[1] == NULL)
+                        continue;
+
                     if (strcmp(tokens[1], "users") == 0)
                     {
                         update_win(
                             w_content,
-                            "HELP",
+                            "USERS COMMAND HELP",
                             "- usage: /users\n"
-                            " - description: shows all users that have an account on the server");
+                            " - description: shows all users that have an account on the server.");
+                    }
+                    else if (strcmp(tokens[1], "roster") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "ROSTER COMMAND HELP",
+                            "- usage: /roster [add <jid>]\n"
+                            " - description:\n\t/roster: shows your roster."
+                            "\n\t/roster add <jid>: adds the user with bare jid to your roster.");
+                    }
+                    else if (strcmp(tokens[1], "active") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "ACTIVE COMMAND HELP",
+                            "- usage: /active\n"
+                            " - description: shows all the <presence> stanzas received.");
+                    }
+                    else if (strcmp(tokens[1], "presence") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "PRESENCE COMMAND HELP",
+                            "- usage: /presence <show> [status]\n"
+                            " - description: change your current presence show and status.\n\t"
+                            "<show> must be one of the following:\n\t- available\n\t- away"
+                            "\n\t- xa\n\t- dnd\n\t[status] is optional and it is a string.");
+                    }
+                    else if (strcmp(tokens[1], "priv") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "PRIV COMMAND HELP",
+                            "- usage: /priv <jid>\n"
+                            " - description: enter into a private chat with user identified by bare jid <jid>.");
+                    }
+                    else if (strcmp(tokens[1], "group") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "GROUP COMMAND HELP",
+                            "- usage: /group <room_jid> <nick>\n"
+                            " - description: enter group chat with group identified by <room_jid> (bare jid)."
+                            "\n\t Your nickname is <nick> and it is not optional.");
+                    }
+                    else if (strcmp(tokens[1], "vcard") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "VCARD COMMAND HELP",
+                            "- usage: /vcard <jid>\n"
+                            " - description: get the vCard of user identified by bare jid <jid>.");
+                    }
+                    else if (strcmp(tokens[1], "file") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "FILE COMMAND HELP",
+                            "- usage: /file <file_path> <jid>\n"
+                            " - description: send file with full path <file_path> to user identified by bare jid <jid>."
+                            "\n\t Only works on small files ~10KB.");
+                    }
+                    else if (strcmp(tokens[1], "menu") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "MENU COMMAND HELP",
+                            "- usage: /menu\n"
+                            " - description: when on a private or group chat, it exits the chat.\n\t"
+                            " Otherwise, it clears the screen.");
+                    }
+                    else if (strcmp(tokens[1], "delete") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "DELETE COMMAND HELP",
+                            "- usage: /delete\n"
+                            " - description: deletes your account from the server.");
+                    }
+                    else if (strcmp(tokens[1], "quit") == 0)
+                    {
+                        update_win(
+                            w_content,
+                            "QUIT COMMAND HELP",
+                            "- usage: /quit\n"
+                            " - description: exit the chat :(");
                     }
                 }
                 else if (strcmp(tokens[0], "/users") == 0)
@@ -396,7 +501,7 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
 void *thread_work(void *data)
 {
     struct thread_data *td = (struct thread_data *)data;
-    xmpp_login(td->username, td->password, on_login);
+    xmpp_client_login(td->host, td->username, td->password, on_login);
 }
 
 void update_win(WINDOW *w, const char *title, const char *content)
@@ -578,4 +683,19 @@ void on_image_sent_result(const char *result)
 void on_img_recv(const char *result)
 {
     update_win(w_content, "IMAGE RECEIVED", result);
+}
+
+void print_title(WINDOW *win, int row, int col)
+{
+    char *title0 = "    __  __           __                ________          __\n";
+    char *title1 = "   / / / /___ ______/ /_____  _____   / ____/ /_  ____ _/ /_\n";
+    char *title2 = "  / /_/ / __ `/ ___/ //_/ _ \\/ ___/  / /   / __ \\/ __ `/ __/\n";
+    char *title3 = " / __  / /_/ / /__/ ,< /  __/ /     / /___/ / / / /_/ / /_  \n";
+    char *title4 = "/_/ /_/\\__,_/\\___/_/|_|\\___/_/      \\____/_/ /_/\\__,_/\\__/\n";
+    mvwprintw(win, row, col, title0);
+    mvwprintw(win, row + 1, col, title1);
+    mvwprintw(win, row + 2, col, title2);
+    mvwprintw(win, row + 3, col, title3);
+    mvwprintw(win, row + 4, col, title4);
+    wrefresh(win);
 }

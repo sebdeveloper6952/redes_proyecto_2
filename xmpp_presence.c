@@ -76,7 +76,7 @@ void send_logged_in_presence(xmpp_conn_t *const conn)
     status = xmpp_stanza_new(ctx);
     text = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(status, "status");
-    xmpp_stanza_set_text(text, "Ola jeje");
+    xmpp_stanza_set_text(text, "ola amigos!");
     xmpp_stanza_add_child(status, text);
     xmpp_stanza_release(text);
     xmpp_stanza_add_child(presence, status);

@@ -22,35 +22,17 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
                         xmpp_stream_error_t *const stream_error,
                         void *const userdata)
 {
-    // xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
     my_data *data = (my_data *)userdata;
     const char *jid = xmpp_conn_get_bound_jid(conn);
 
     if (status == XMPP_CONN_CONNECT)
     {
-        // fprintf(stderr, "DEBUG: login succesful.\n");
-        // int secured = xmpp_conn_is_secured(conn);
-        // fprintf(stderr, "DEBUG: connection is %s.\n",
-        //         secured ? "secured" : "NOT secured");
-
         // send the presence stanza to show available status
         send_logged_in_presence(conn);
 
         // login callback passed externally
         if (data != NULL && data->cb != NULL)
             data->cb(NULL);
-
-        // join or create group
-        // join_gm_room(conn, "f1", "checo_perez");
-        // send_gm_msg(conn, "f1@conference.redes2020.xyz", "printf");
-
-        // server items
-        // get_items_from_server(conn, "redes2020.xyz");
-
-        // proxy service info
-        // iq_get_from_proxy(conn, "proxy.redes2020.xyz");
-        // get_info_from_service(conn, "proxy");
-        // get_items_from_service(conn, "proxy");
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {
@@ -58,12 +40,11 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
     }
     else
     {
-        // fprintf(stderr, "DEBUG: not able to login.\n");
         xmpp_stop(data->ctx);
     }
 }
 
-void xmpp_login(const char *jid, const char *pass, void(*on_login))
+void xmpp_client_login(const char *host, const char *jid, const char *pass, void(*on_login))
 {
     xmpp_ctx_t *ctx;
     xmpp_log_t *log;
@@ -73,9 +54,6 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
     // initialize library
     xmpp_initialize();
 
-    // log = xmpp_get_default_logger(XMPP_LEVEL_DEBUG);
-    // ctx = xmpp_ctx_new(NULL, log);
-
     ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
 
@@ -83,12 +61,10 @@ void xmpp_login(const char *jid, const char *pass, void(*on_login))
     xmpp_conn_set_keepalive(conn, 60, 30);
     xmpp_conn_set_flags(conn, flags);
 
-    // set jid and password for authentication
-    // xmpp_conn_set_jid(conn, jid);
-    // xmpp_conn_set_pass(conn, pass);
-
+    // set connection jid and password
     strcat(full_jid, jid);
-    strcat(full_jid, "@redes2020.xyz");
+    strcat(full_jid, "@");
+    strcat(full_jid, host);
     xmpp_conn_set_jid(conn, full_jid);
     xmpp_conn_set_pass(conn, pass);
 
