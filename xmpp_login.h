@@ -16,7 +16,10 @@ void xmpp_client_get_vcard(const char *jid);
 void xmpp_client_add_vcard_handler(void(*on_result));
 void xmpp_client_delete_account(void(*on_result));
 void xmpp_client_add_subscription_handler(void(*on_result));
-void xmpp_client_add_file_recv_init_handler(void(*on_result));
-void xmpp_client_add_file_streamhost_handler(void(*on_result));
 void xmpp_client_add_img_recv_handler(void(*on_result));
 void xmpp_client_send_img(const char *jid_to, const char *path, void(*on_result));
+
+void xmpp_client_offer_file(const char *path, const char *jid_to, void(*on_result));
+void xmpp_client_add_file_offer_handler(void(*on_result));
+void xmpp_client_offer_streamhost(const char *jid_to, void(*on_result));
+void xmpp_client_add_streamhost_offer_handler(void(*on_result));

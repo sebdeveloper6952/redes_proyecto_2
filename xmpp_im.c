@@ -17,23 +17,10 @@ int im_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const use
     body = xmpp_stanza_get_child_by_name(st, "body");
     from = xmpp_stanza_get_attribute(st, "from");
 
-    // strcat(msg, "\n\n******* PRIVATE MSG *******\n");
-    // strcat(msg, "* FROM: ");
-    // strcat(msg, from);
-    // strcat(msg, "\n");
-    // strcat(msg, "* BODY: ");
-    // if (body)
-    // {
-    //     msg_body = xmpp_stanza_get_text(body);
-    //     strcat(msg, msg_body);
-    // }
-    // strcat(msg, "\n***************************\n");
-    // fprintf(stderr, "%s\n", msg);
-
-    if (body && data->msg_cb != NULL)
+    if (body && data->msg_cb)
     {
         msg_body = xmpp_stanza_get_text(body);
-        data->msg_cb(from, msg_body);
+        data->msg_cb(from, msg_body ? msg_body : "");
         xmpp_free(ctx, msg_body);
     }
 

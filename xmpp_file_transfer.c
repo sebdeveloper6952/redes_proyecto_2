@@ -14,16 +14,40 @@ char stream_id[64] = {};
 const char *filename = NULL;
 long filesize = 0;
 
-void iq_get_from_proxy(xmpp_conn_t *const conn, const char *service)
+char proxy_jid[64] = {};
+char proxy_host[64] = {};
+char proxy_port[64] = {};
+
+void iq_get_from_proxy(xmpp_conn_t *const conn)
 {
+    xmpp_id_handler_add(conn, iq_get_from_proxy_result_handler, "proxy_service_network", NULL);
     xmpp_send_raw_string(
         conn,
-        "<iq from='%s' to='%s' type='get' id='%s_service_network'>"
+        "<iq from='%s' to='proxy.redes2020.xyz' type='get' id='proxy_service_network'>"
         "<query xmlns='http://jabber.org/protocol/bytestreams'/>"
         "</iq>",
-        xmpp_conn_get_bound_jid(conn),
-        service,
-        service);
+        xmpp_conn_get_bound_jid(conn));
+}
+
+int iq_get_from_proxy_result_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const stanza, void *const userdata)
+{
+    xmpp_stanza_t *st;
+
+    st = xmpp_stanza_get_child_by_name(stanza, "query");
+    if (st)
+        st = xmpp_stanza_get_child_by_name(st, "streamhost");
+    if (st)
+    {
+        const char *t;
+        t = xmpp_stanza_get_attribute(st, "jid");
+        strcpy(proxy_jid, t);
+        t = xmpp_stanza_get_attribute(st, "host");
+        strcpy(proxy_host, t);
+        t = xmpp_stanza_get_attribute(st, "port");
+        strcpy(proxy_port, t);
+    }
+
+    return 0;
 }
 
 int file_transfer_init_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata)
@@ -261,4 +285,252 @@ void start_file_transfer(
     }
     data->msg_cb(jid, "Read file data.");
     free(file_buf);
+}
+
+void offer_file(xmpp_conn_t *const conn, const char *jid, const char *path, void *const userdata)
+{
+    xmpp_ctx_t *ctx;
+    my_data *data;
+    FILE *fp;
+    long file_size = 0;
+
+    ctx = xmpp_conn_get_context(conn);
+    data = (my_data *)userdata;
+    // open file for reading
+    fp = fopen(path, "r");
+    if (fp == NULL)
+    {
+        data->cb("File not found.");
+        return;
+    }
+
+    // get file size
+    fseek(fp, 0, SEEK_END);
+    file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    // file size to string
+    char buf[8];
+    sprintf(buf, "%ld", file_size);
+
+    // close file
+    fclose(fp);
+
+    xmpp_stanza_t *iq, *si, *file, *feature, *x, *field, *option, *value, *text, *temp;
+    iq = xmpp_iq_new(ctx, "set", "npq71g53");
+    xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(iq, jid);
+
+    si = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(si, "si");
+    xmpp_stanza_set_id(si, "vxf9n471bn46");
+    xmpp_stanza_set_attribute(si, "profile", "http://jabber.org/protocol/si/profile/file-transfer");
+    xmpp_stanza_set_ns(si, "http://jabber.org/protocol/si");
+
+    file = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(file, "file");
+    xmpp_stanza_set_ns(file, "http://jabber.org/protocol/si/profile/file-transfer");
+    xmpp_stanza_set_attribute(file, "size", buf);
+    xmpp_stanza_set_attribute(file, "name", path);
+
+    feature = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(feature, "feature");
+    xmpp_stanza_set_ns(feature, "http://jabber.org/protocol/feature-neg");
+
+    x = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(x, "x");
+    xmpp_stanza_set_ns(x, "jabber:x:data");
+    xmpp_stanza_set_type(x, "form");
+
+    field = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(field, "field");
+    xmpp_stanza_set_type(field, "list-single");
+    xmpp_stanza_set_attribute(field, "var", "stream-method");
+
+    option = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(option, "option");
+
+    value = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(value, "value");
+
+    temp = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_text(temp, "http://jabber.org/protocol/bytestreams");
+
+    xmpp_stanza_add_child(value, temp);
+    xmpp_stanza_add_child(option, value);
+    xmpp_stanza_add_child(field, option);
+    xmpp_stanza_add_child(x, field);
+    xmpp_stanza_add_child(feature, x);
+    xmpp_stanza_add_child(si, file);
+    xmpp_stanza_add_child(si, feature);
+    xmpp_stanza_add_child(iq, si);
+
+    char *st_buf;
+    size_t buf_len;
+    xmpp_stanza_to_text(iq, &st_buf, &buf_len);
+    data->cb(st_buf);
+
+    xmpp_send(conn, iq);
+
+    xmpp_stanza_release(temp);
+    xmpp_stanza_release(value);
+    xmpp_stanza_release(option);
+    xmpp_stanza_release(field);
+    xmpp_stanza_release(x);
+    xmpp_stanza_release(feature);
+    xmpp_stanza_release(file);
+    xmpp_stanza_release(si);
+    xmpp_stanza_release(iq);
+}
+
+int file_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata)
+{
+    xmpp_stanza_t *st_si;
+    my_data *data;
+    const char *st_id;
+
+    data = (my_data *)userdata;
+    if (data)
+        data->cb("File offer received.");
+
+    st_si = xmpp_stanza_get_child_by_name(st, "si");
+    if (st_si)
+    {
+        st_id = xmpp_stanza_get_id(st_si);
+        xmpp_send_raw_string(
+            conn,
+            "<iq from='%s' to='%s' id='%s' type='result'>"
+            "<si xmlns='http://jabber.org/protocol/si' id='%s'>"
+            "<feature xmlns='http://jabber.org/protocol/feature-neg'>"
+            "<x xmlns='jabber:x:data' type='submit'>"
+            "<field var='stream-method'>"
+            "<value>http://jabber.org/protocol/bytestreams</value>"
+            "</field>"
+            "</x>"
+            "</feature>"
+            "</si>"
+            "</iq>",
+            xmpp_conn_get_bound_jid(conn),
+            xmpp_stanza_get_from(st),
+            xmpp_stanza_get_id(st),
+            st_id);
+
+        if (data)
+            data->cb("File offer received and accepted.");
+    }
+
+    return 1;
+}
+
+void offer_streamhost(xmpp_conn_t *const conn, const char *jid_to, void *const userdata)
+{
+    my_data *data;
+    xmpp_ctx_t *ctx;
+    xmpp_stanza_t *iq, *query, *stream;
+    const char *stream_id = NULL;
+
+    data = (my_data *)userdata;
+    // set message handler
+    xmpp_id_handler_add(conn, streamhost_offer_handler, "offer_streamhost", data);
+
+    // stanza creation and sending
+    ctx = xmpp_conn_get_context(conn);
+    iq = xmpp_iq_new(ctx, "set", "offer_streamhost");
+    xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(iq, jid_to);
+
+    query = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(query, "query");
+    xmpp_stanza_set_ns(query, "http://jabber.org/protocol/bytestreams");
+    xmpp_stanza_set_attribute(query, "sid", "vxf9n471bn46");
+
+    stream = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(stream, "streamhost");
+    xmpp_stanza_set_attribute(stream, "host", "172.31.36.220");
+    xmpp_stanza_set_attribute(stream, "port", "7777");
+    xmpp_stanza_set_attribute(stream, "jid", "proxy.redes2020.xyz");
+
+    xmpp_stanza_add_child(query, stream);
+    xmpp_stanza_release(stream);
+    xmpp_stanza_add_child(iq, query);
+    xmpp_stanza_release(query);
+
+    xmpp_send(conn, iq);
+
+    // char *st_buf;
+    // size_t buf_len;
+    // xmpp_stanza_to_text(iq, &st_buf, &buf_len);
+    // data->cb(st_buf);
+    xmpp_stanza_release(iq);
+}
+
+int streamhost_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata)
+{
+    xmpp_ctx_t *ctx;
+    xmpp_stanza_t *st_query, *st_streamhost;
+    my_data *data;
+    struct sockaddr_in server;
+    const char *host, *port, *streamhost_jid;
+    int sockfd;
+
+    ctx = xmpp_conn_get_context(conn);
+    data = (my_data *)userdata;
+
+    char *st_buf;
+    size_t buf_len;
+    xmpp_stanza_to_text(st, &st_buf, &buf_len);
+    data->cb(st_buf);
+
+    return 0;
+
+    st_query = xmpp_stanza_get_child_by_name(st, "query");
+    if (st_query)
+    {
+        st_streamhost = xmpp_stanza_get_child_by_name(st_query, "streamhost");
+        if (st_streamhost)
+        {
+            streamhost_jid = xmpp_stanza_get_attribute(st_streamhost, "jid");
+            host = xmpp_stanza_get_attribute(st_streamhost, "host");
+            port = xmpp_stanza_get_attribute(st_streamhost, "port");
+
+            if (host && port)
+            {
+                // open socket to streamhost proxy
+                sockfd = socket(AF_INET, SOCK_STREAM, 0);
+                if (sockfd == -1)
+                {
+                    data->cb("Error opening socket to streamhost.");
+
+                    return 0;
+                }
+
+                server.sin_addr.s_addr = inet_addr(host);
+                server.sin_family = AF_INET;
+                server.sin_port = htons(atol(port));
+
+                if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
+                {
+                    data->cb("Error connecting to streamhost.");
+
+                    return 0;
+                }
+                data->cb("Successfully connected to streamhost proxy.");
+
+                // socket open success, send streamhost used
+                xmpp_send_raw_string(
+                    conn,
+                    "<iq from='%s' to='%s' id='%s' type='result'>"
+                    "<query xmlnx='http://jabber.org/protocol/bytestreams' sid='%s'>"
+                    "<streamhost-used jid='proxy.redes2020.xyz'/>"
+                    "</query>"
+                    "</iq>",
+                    xmpp_conn_get_bound_jid(conn),
+                    xmpp_stanza_get_from(st),
+                    xmpp_stanza_get_id(st),
+                    xmpp_stanza_get_attribute(st_query, "sid"));
+            }
+        }
+    }
+
+    return 0;
 }

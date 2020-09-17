@@ -39,6 +39,10 @@ void on_file_recv_init(const char *from, const char *msg);
 void on_file_streamhost_recv(const char *from, const char *msg);
 void on_image_sent_result(const char *result);
 void on_img_recv(const char *result);
+void on_file_offer_result(const char *result);
+void on_file_offer_received(const char *result);
+void on_streamhost_offer_sent(const char *result);
+void on_streamhost_offer_received(const char *result);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
@@ -137,7 +141,7 @@ int main(int argc, char *argv[])
         wbkgd(w_content, COLOR_PAIR(1));
         mvwprintw(w_content, 10, 1, "\tWelcome!");
         mvwprintw(w_content, 11, 1, "\tBrowse the commands and enter /help <command>"
-                                    " to find more info about the command.");
+                                    " to find more info about the commands.");
         print_title(w_content, 2, 2);
 
         w_prompt = create_newwin(3, COLS - 40, LINES - 3, 35);
@@ -390,11 +394,13 @@ int main(int argc, char *argv[])
                 {
                     if (tokens[1] != NULL && tokens[2] != NULL)
                     {
-                        update_win(w_content, "SENDING IMAGE", "\tplease wait...");
-                        xmpp_client_send_img(
-                            tokens[2],
-                            tokens[1],
-                            on_image_sent_result);
+                        // update_win(w_content, "SENDING IMAGE", "\tplease wait...");
+                        // xmpp_client_send_img(
+                        //     tokens[2],
+                        //     tokens[1],
+                        //     on_image_sent_result);
+                        // xmpp_client_offer_file(tokens[1], tokens[2], on_file_offer_result);
+                        xmpp_client_offer_streamhost(tokens[2], on_streamhost_offer_sent);
                     }
                 }
             }
@@ -540,7 +546,9 @@ void on_login()
     xmpp_client_add_priv_msg_handler(on_msg);
     xmpp_client_add_gm_msg_handler(on_msg);
     xmpp_client_add_vcard_handler(on_vcard_result);
-    xmpp_client_add_img_recv_handler(on_img_recv);
+    // xmpp_client_add_img_recv_handler(on_img_recv);
+    // xmpp_client_add_file_offer_handler(on_file_offer_received);
+    // xmpp_client_add_streamhost_offer_handler(on_streamhost_offer_received);
 }
 
 void on_users_result(const char *roster)
@@ -683,6 +691,28 @@ void on_image_sent_result(const char *result)
 void on_img_recv(const char *result)
 {
     update_win(w_content, "IMAGE RECEIVED", result);
+}
+
+void on_file_offer_result(const char *result)
+{
+    update_win(w_content, "FILE OFFER", result);
+}
+
+void on_file_offer_received(const char *result)
+{
+    update_win(w_content, "FILE OFFER RECEIVED", result);
+}
+
+void on_streamhost_offer_sent(const char *result)
+{
+    update_win(w_content, "STREAMHOST OFFER SENT", result);
+}
+
+void on_streamhost_offer_received(const char *result)
+{
+    // update_win(w_content, "STREAMHOST OFFER RECEIVED", result);
+    mvwprintw(w_content, 1, 1, "STREAMHOST OFFER RECEIVED");
+    wrefresh(w_content);
 }
 
 void print_title(WINDOW *win, int row, int col)
