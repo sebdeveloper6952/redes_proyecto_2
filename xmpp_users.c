@@ -40,7 +40,8 @@ int search_result_handler(
     xmpp_stanza_t *next = NULL;
     xmpp_stanza_t *item = NULL;
     my_data *data = (my_data *)userdata;
-    char users_buf[64 * 37];
+    char users_buf[64 * 32];
+    unsigned char i = 0;
 
     ctx = xmpp_conn_get_context(conn);
     query = xmpp_stanza_get_child_by_name(stanza, "query");
@@ -71,6 +72,8 @@ int search_result_handler(
             }
         }
 
+        if (++i == 32)
+            break;
         next = xmpp_stanza_get_next(next);
     }
 
