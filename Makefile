@@ -6,3 +6,5 @@ pkg_config = `pkg-config --cflags --libs libstrophe`
 libs = -lncurses -lpthread
 all:
 	gcc -o ncurses_client ncurses_client.c $(deps) $(pkg_config) $(libs)
+test:
+	gcc -o test_client test_client.c $(deps) $(pkg_config) $(libs)

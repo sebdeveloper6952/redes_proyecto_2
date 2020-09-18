@@ -15,3 +15,9 @@ void offer_file(xmpp_conn_t *const conn, const char *jid, const char *path, void
 int file_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata);
 void offer_streamhost(xmpp_conn_t *const conn, const char *jid_to, void *const userdata);
 int streamhost_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata);
+void send_ibb_init(xmpp_conn_t *const conn, const char *jid_to, void *const userdata);
+int ibb_offer_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata);
+int ibb_offer_accepted_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata);
+int ibb_data_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata);
+void ibb_send_data_chunk(xmpp_conn_t *const conn, const char *jid, unsigned short chunk_no, void *const userdata);
+int ibb_data_ack_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata);

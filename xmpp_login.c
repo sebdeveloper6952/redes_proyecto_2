@@ -33,7 +33,7 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
         send_logged_in_presence(conn);
 
         // proxy service
-        // iq_get_from_proxy(conn);
+        iq_get_from_proxy(conn);
 
         // login callback passed externally
         if (data != NULL && data->cb != NULL)
@@ -58,6 +58,10 @@ void xmpp_client_login(const char *host, const char *jid, const char *pass, void
 
     // initialize library
     xmpp_initialize();
+
+    // use this to show debug messages
+    // log = xmpp_get_default_logger(XMPP_LEVEL_DEBUG);
+    // ctx = xmpp_ctx_new(NULL, log);
 
     ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
@@ -231,15 +235,22 @@ void xmpp_client_offer_file(const char *path, const char *jid_to, void(*on_resul
     my_data *data = new_data();
     data->cb = on_result;
 
-    char full_jid[256] = {};
-    strcat(full_jid, jid_to);
-    strcat(full_jid, "@");
-    strcat(full_jid, _host);
+    // char full_jid[256] = {};
+    // strcat(full_jid, jid_to);
+    // strcat(full_jid, "@");
+    // strcat(full_jid, _host);
 
-    offer_file(conn, full_jid, path, data);
+    offer_file(conn, jid_to, path, data);
 }
 
 void xmpp_client_add_file_offer_handler(void(*on_result))
+{
+    my_data *data = new_data();
+    data->cb = on_result;
+    xmpp_handler_add(conn, file_offer_handler, NULL, "iq", "result", data);
+}
+
+void xmpp_client_add_file_offer_recv_handler(void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
@@ -251,17 +262,24 @@ void xmpp_client_offer_streamhost(const char *jid_to, void(*on_result))
     my_data *data = new_data();
     data->cb = on_result;
 
-    char full_jid[256] = {};
-    strcat(full_jid, jid_to);
-    strcat(full_jid, "@");
-    strcat(full_jid, _host);
+    // char full_jid[256] = {};
+    // strcat(full_jid, jid_to);
+    // strcat(full_jid, "@");
+    // strcat(full_jid, _host);
 
-    offer_streamhost(conn, full_jid, data);
+    offer_streamhost(conn, jid_to, data);
 }
 
 void xmpp_client_add_streamhost_offer_handler(void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
-    xmpp_handler_add(conn, streamhost_offer_handler, "http://jabber.org/protocol/bytestreams", "iq", "set", data);
+    xmpp_id_handler_add(conn, streamhost_offer_handler, "offer_streamhost", data);
+}
+
+void xmpp_client_add_ibb_offer_recv_handler(void(*on_result))
+{
+    my_data *data = new_data();
+    data->cb = on_result;
+    xmpp_handler_add(conn, ibb_offer_recv_handler, NULL, "iq", "set", data);
 }

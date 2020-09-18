@@ -40,9 +40,10 @@ void on_file_streamhost_recv(const char *from, const char *msg);
 void on_image_sent_result(const char *result);
 void on_img_recv(const char *result);
 void on_file_offer_result(const char *result);
-void on_file_offer_received(const char *result);
+void on_file_offer_recv(const char *result);
 void on_streamhost_offer_sent(const char *result);
 void on_streamhost_offer_received(const char *result);
+void on_ibb_offer_recv(const char *result);
 
 WINDOW *w_title, *w_help, *w_prompt, *w_active, *w_content;
 pthread_t worker_thread;
@@ -399,8 +400,9 @@ int main(int argc, char *argv[])
                         //     tokens[2],
                         //     tokens[1],
                         //     on_image_sent_result);
-                        // xmpp_client_offer_file(tokens[1], tokens[2], on_file_offer_result);
-                        xmpp_client_offer_streamhost(tokens[2], on_streamhost_offer_sent);
+
+                        xmpp_client_offer_file(tokens[1], tokens[2], on_file_offer_result);
+                        // xmpp_client_offer_streamhost(tokens[2], on_streamhost_offer_sent);
                     }
                 }
             }
@@ -547,8 +549,10 @@ void on_login()
     xmpp_client_add_gm_msg_handler(on_msg);
     xmpp_client_add_vcard_handler(on_vcard_result);
     // xmpp_client_add_img_recv_handler(on_img_recv);
-    // xmpp_client_add_file_offer_handler(on_file_offer_received);
-    // xmpp_client_add_streamhost_offer_handler(on_streamhost_offer_received);
+    xmpp_client_add_file_offer_handler(on_file_offer_result);
+    xmpp_client_add_file_offer_recv_handler(on_file_offer_recv);
+    xmpp_client_add_streamhost_offer_handler(on_streamhost_offer_received);
+    xmpp_client_add_ibb_offer_recv_handler(on_ibb_offer_recv);
 }
 
 void on_users_result(const char *roster)
@@ -695,10 +699,10 @@ void on_img_recv(const char *result)
 
 void on_file_offer_result(const char *result)
 {
-    update_win(w_content, "FILE OFFER", result);
+    update_win(w_content, "FILE OFFER SENT", result);
 }
 
-void on_file_offer_received(const char *result)
+void on_file_offer_recv(const char *result)
 {
     update_win(w_content, "FILE OFFER RECEIVED", result);
 }
@@ -710,9 +714,12 @@ void on_streamhost_offer_sent(const char *result)
 
 void on_streamhost_offer_received(const char *result)
 {
-    // update_win(w_content, "STREAMHOST OFFER RECEIVED", result);
-    mvwprintw(w_content, 1, 1, "STREAMHOST OFFER RECEIVED");
-    wrefresh(w_content);
+    update_win(w_content, "STREAMHOST OFFER RECEIVED", result);
+}
+
+void on_ibb_offer_recv(const char *result)
+{
+    update_win(w_content, "IBB OFFER RECEIVED", result);
 }
 
 void print_title(WINDOW *win, int row, int col)
