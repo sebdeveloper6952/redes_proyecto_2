@@ -28,8 +28,8 @@ Notación utilizada `<option>` denota un argumento obligatorio, `[option]` denot
   - ejemplo `/users`
 * `/roster`
   - uso: `/roster [add <jid>]`
-  - descripción: cuando se utiliza `/roster`, se muestran los contactos del usuario. Cuando se utiliza `/roster add <jid>`, se envía una suscripción al usuario identificado con Jabber ID `<jid>`. Esto funciona como una petición de amistad.
-  - ejemplo `/roster add sebdev@redes2020.xyz`
+  - descripción: cuando se utiliza `/roster`, se muestran los contactos del usuario. Cuando se utiliza `/roster add <jid>`, se envía una suscripción al usuario identificado con Jabber ID `<jid>`. Esto funciona como una petición de amistad. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
+  - ejemplo `/roster add sebdev`
 * `/active`
   - uso: `/active`
   - descripción: muestra todos los estados que se han recibido de los contactos del usuario. Cuando un contacto del usuario inicia sesión, envía un stanza de presencia al servidor, y el servidor lo reenvía a todos los contados de dicho usuario. Esa stanza de presencia es la que se muestra en este comando.
