@@ -21,43 +21,43 @@ Notación utilizada `<option>` denota un argumento obligatorio, `[option]` denot
 * `/help`
   - uso: `/help <command>`
   - descripción: muestra detalles sobre el comando especificado.
-  - ejemplo `/help users`
+  - ejemplo: `/help users`
 * `/users`
   - uso: `/users`
   - descripción: muestra hasta 32 de los usuarios registrados en el servidor.
-  - ejemplo `/users`
+  - ejemplo: `/users`
 * `/roster`
   - uso: `/roster [add <jid>]`
   - descripción: cuando se utiliza `/roster`, se muestran los contactos del usuario. Cuando se utiliza `/roster add <jid>`, se envía una suscripción al usuario identificado con Jabber ID `<jid>`. Esto funciona como una petición de amistad. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo `/roster add sebdev`
+  - ejemplo: `/roster add sebdev`
 * `/active`
   - uso: `/active`
   - descripción: muestra todos los estados que se han recibido de los contactos del usuario. Cuando un contacto del usuario inicia sesión, envía un stanza de presencia al servidor, y el servidor lo reenvía a todos los contados de dicho usuario. Esa stanza de presencia es la que se muestra en este comando.
-  - ejemplo `/active`
+  - ejemplo: `/active`
 * `/presence`
   - uso: `/presence <show> [status]`
   - descripción: cambia el estado actual del usuario. `<show>` debe ser uno de los siguientes valores: `available`, `away`, `xa`, `dnd`, `invisible`. `<status>` es opcional y es una cadena de caracteres que se muestra como el estado del usuario.
-  - ejemplo `/presence away en clases`
+  - ejemplo: `/presence away en clases`
 * `/priv`
   - uso: `/priv <jid>`
   - descripción: inicia un chat privado con el usuario identificado con Jabber ID `<jid>`. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo `/priv sebdev`
+  - ejemplo: `/priv sebdev`
 * `/group`
   - uso: `/group <room_jid> <nick>`
   - descripción: se une al grupo con Jabber ID `<jid>`. Si el grupo no existe y el servidor está configurado correctamente, el grupo es creado. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo. `<nick>` es el apodo que el usuario desea tener dentro del grupo.
-  - ejemplo `/group mi_grupo_favorito juan`
+  - ejemplo: `/group mi_grupo_favorito juan`
 * `/vcard`
   - uso: `/vcard <jid>`
   - descripción: muestra la vCard del usuario identificado por Jabber ID `<jid>`. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo `/vcard sebdev`
+  - ejemplo: `/vcard sebdev`
 * `/file`
   - uso: `/file <path> <jid>`
   - descripción: Envía el archivo identificado por `<path>` al usuario identificado por su Jabber ID `<jid>`. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo `/file test.png sebdev`
+  - ejemplo: `/file test.png sebdev`
 * `/menu`
   - uso: `/menu`
   - descripción: limpia la pantalla. Si se está dentro de un chat privado o grupal, se sale del chat.
-  - ejemplo `/menu`
+  - ejemplo: `/menu`
 * `/delete`
   - uso: `/delete`
   - descripción: elimina la cuenta del usuario del servidor.
@@ -65,4 +65,4 @@ Notación utilizada `<option>` denota un argumento obligatorio, `[option]` denot
 * `/quit`
   - uso: `/quit`
   - descripción: sale del programa :(
-  - ejemplo `/quit`
+  - ejemplo: `/quit`
