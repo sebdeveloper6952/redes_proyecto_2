@@ -186,7 +186,12 @@ void xmpp_client_add_to_roster(const char *jid)
 
 void xmpp_client_get_vcard(const char *jid)
 {
-    get_vcard(conn, jid);
+    char full_jid[256] = {};
+    strcat(full_jid, jid);
+    strcat(full_jid, "@");
+    strcat(full_jid, _host);
+
+    get_vcard(conn, full_jid);
 }
 
 void xmpp_client_delete_account(void(*on_result))
