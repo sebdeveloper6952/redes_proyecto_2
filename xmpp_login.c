@@ -180,8 +180,12 @@ void xmpp_client_add_presence_handler(void(*on_result))
 
 void xmpp_client_add_to_roster(const char *jid)
 {
-    // test add friend
-    send_subscription_request(conn, jid);
+    char full_jid[256] = {};
+    strcat(full_jid, jid);
+    strcat(full_jid, "@");
+    strcat(full_jid, _host);
+
+    send_subscription_request(conn, full_jid);
 }
 
 void xmpp_client_get_vcard(const char *jid)
