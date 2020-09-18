@@ -377,13 +377,7 @@ void offer_file(xmpp_conn_t *const conn, const char *jid, const char *path, void
     xmpp_stanza_add_child(si, feature);
     xmpp_stanza_add_child(iq, si);
 
-    char *st_buf;
-    size_t buf_len;
-    xmpp_stanza_to_text(iq, &st_buf, &buf_len);
-    data->cb(st_buf);
-
     xmpp_send(conn, iq);
-
     xmpp_stanza_release(temp);
     xmpp_stanza_release(value);
     xmpp_stanza_release(option);
@@ -406,17 +400,10 @@ int file_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *c
     st_si = xmpp_stanza_get_child_by_name(st, "si");
     if (st_si)
     {
-        // for debugging
-        char *st_buf;
-        size_t buf_len;
-        xmpp_stanza_to_text(st, &st_buf, &buf_len);
-        data->cb(st_buf);
-
         if (strcmp(xmpp_stanza_get_type(st), "result") == 0)
         {
             // we offered the file
-            // offer_streamhost(conn, xmpp_stanza_get_from(st), data);
-            data->cb("offering streamhost");
+            data->cb("offering ibb");
             xmpp_handler_add(conn, ibb_offer_accepted_handler, NULL, "iq", "result", userdata);
             xmpp_handler_add(conn, ibb_data_ack_handler, NULL, "iq", "result", userdata);
             send_ibb_init(conn, xmpp_stanza_get_from(st), userdata);
@@ -433,6 +420,12 @@ int file_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *c
             memset(cur_filename, 0, sizeof(cur_filename));
             strcpy(cur_filename, t_filename);
             cur_filesize = atol(t_filesize);
+
+            // allocate memory for base64 encoded buffer
+            encoded_file = malloc(atol(t_filesize) * 2);
+
+            // set handler for ibb close
+            xmpp_handler_add(conn, ibb_close_recv_handler, NULL, "iq", "set", userdata);
 
             xmpp_send_raw_string(
                 conn,
@@ -601,7 +594,8 @@ int ibb_offer_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, voi
         xmpp_stanza_set_to(st_iq, xmpp_stanza_get_from(st));
 
         // set handler for incomming data
-        xmpp_handler_add(conn, ibb_data_recv_handler, NULL, "iq", "set", userdata);
+        // xmpp_handler_add(conn, ibb_data_recv_handler, NULL, "iq", "set", userdata);
+        xmpp_id_handler_add(conn, ibb_data_recv_handler, "data_offer", userdata);
         xmpp_send(conn, st_iq);
         xmpp_stanza_release(st_iq);
 
@@ -661,10 +655,10 @@ int ibb_offer_accepted_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st,
     free(file_buffer);
 
     // send first chunk
-    data->cb("sending first chunk...");
+    data->cb("Sending first chunk");
     ibb_send_data_chunk(conn, xmpp_stanza_get_from(st), 0, data);
 
-    return 1;
+    return 0;
 }
 
 void ibb_send_data_chunk(xmpp_conn_t *const conn, const char *jid, unsigned short chunk_no, void *const userdata)
@@ -675,6 +669,7 @@ void ibb_send_data_chunk(xmpp_conn_t *const conn, const char *jid, unsigned shor
     char b_chunk_no[6] = {};
     char msg[64] = {};
 
+    data = (my_data *)userdata;
     ctx = xmpp_conn_get_context(conn);
     st_iq = xmpp_iq_new(ctx, "set", "data_offer");
     xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
@@ -688,10 +683,13 @@ void ibb_send_data_chunk(xmpp_conn_t *const conn, const char *jid, unsigned shor
     xmpp_stanza_set_attribute(st_data, "sid", "vxf9n471bn46");
 
     st_text = xmpp_stanza_new(ctx);
+    long chunk_size = cur_ibb_bsize;
     char *chunk;
-    chunk = malloc(cur_ibb_bsize);
-    memset(chunk, 0, cur_ibb_bsize);
-    memcpy(chunk, &encoded_file[cur_ibb_seq * cur_ibb_bsize], cur_ibb_bsize);
+    if ((chunk_no * cur_ibb_bsize + cur_ibb_bsize) > strlen(encoded_file))
+        chunk_size = strlen(encoded_file) - chunk_no * cur_ibb_bsize;
+    chunk = malloc(chunk_size);
+    memset(chunk, 0, chunk_size);
+    memcpy(chunk, &encoded_file[chunk_no * cur_ibb_bsize], chunk_size);
     xmpp_stanza_set_text(st_text, chunk);
     free(chunk);
 
@@ -702,8 +700,11 @@ void ibb_send_data_chunk(xmpp_conn_t *const conn, const char *jid, unsigned shor
     xmpp_send(conn, st_iq);
     xmpp_stanza_release(st_iq);
 
-    data = (my_data *)userdata;
-    sprintf(msg, "Data chunk seq %d sent...", chunk_no);
+    sprintf(
+        msg,
+        "Sent chunk no. %d with size %ld bytes...",
+        chunk_no,
+        chunk_size);
     data->cb(msg);
 }
 
@@ -712,22 +713,39 @@ int ibb_data_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void
     xmpp_ctx_t *ctx;
     xmpp_stanza_t *st_iq, *st_data;
     my_data *data;
+    char *chunk;
     char msg[64] = {};
+    const char *chunk_no;
+    long l_chunk_no = 0;
 
     st_data = xmpp_stanza_get_child_by_name(st, "data");
     if (st_data)
     {
-        // send data ack
+        data = (my_data *)userdata;
         ctx = xmpp_conn_get_context(conn);
+
+        // get data and save in buffer
+        chunk_no = xmpp_stanza_get_attribute(st_data, "seq");
+
+        l_chunk_no = atol(chunk_no);
+        chunk = xmpp_stanza_get_text(st_data);
+        memcpy(&encoded_file[l_chunk_no * cur_ibb_bsize], chunk, strlen(chunk));
+        xmpp_free(ctx, chunk);
+
+        // send data ack
         st_iq = xmpp_iq_new(ctx, "result", xmpp_stanza_get_id(st));
         xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
         xmpp_stanza_set_to(st_iq, xmpp_stanza_get_from(st));
         xmpp_send(conn, st_iq);
         xmpp_stanza_release(st_iq);
 
-        data = (my_data *)userdata;
-        sprintf(msg, "Recv chunk no: %s...", xmpp_stanza_get_attribute(st_data, "seq"));
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "Recv and ACK chunk no: %s...", chunk_no);
         data->cb(msg);
+    }
+    else
+    {
+        data->cb("data recv, no <data>");
     }
 
     return 1;
@@ -739,10 +757,90 @@ int ibb_data_ack_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void 
     data = (my_data *)userdata;
     char msg[64] = {};
 
-    sprintf(msg, "Data chunk no. %d was ack, sending next...", cur_ibb_seq);
+    sprintf(msg, "Data chunk no. %d was ack, sending next chunk...", cur_ibb_seq);
     data->cb(msg);
 
-    ibb_send_data_chunk(conn, xmpp_stanza_get_from(st), ++cur_ibb_seq, userdata);
+    cur_ibb_seq++;
+    if (cur_ibb_seq * cur_ibb_bsize > strlen(encoded_file))
+    {
+        send_ibb_close(conn, xmpp_stanza_get_from(st), userdata);
+        data->cb("Sending data chunk close.");
+    }
+    else
+    {
+        ibb_send_data_chunk(conn, xmpp_stanza_get_from(st), cur_ibb_seq, userdata);
+    }
+
+    return 1;
+}
+
+void send_ibb_close(xmpp_conn_t *const conn, const char *jid_to, void *const userdata)
+{
+    xmpp_ctx_t *ctx;
+    xmpp_stanza_t *st_iq, *st_close;
+    my_data *data;
+
+    data = (my_data *)userdata;
+
+    ctx = xmpp_conn_get_context(conn);
+    st_iq = xmpp_iq_new(ctx, "set", "kjsf4eyff");
+    xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
+    xmpp_stanza_set_to(st_iq, jid_to);
+
+    st_close = xmpp_stanza_new(ctx);
+    xmpp_stanza_set_name(st_close, "close");
+    xmpp_stanza_set_ns(st_close, "http://jabber.org/protocol/ibb");
+    xmpp_stanza_set_attribute(st_close, "sid", "vxf9n471bn46");
+
+    xmpp_stanza_add_child(st_iq, st_close);
+    xmpp_stanza_release(st_close);
+    xmpp_send(conn, st_iq);
+    xmpp_stanza_release(st_iq);
+
+    // free file resources
+    xmpp_free(ctx, encoded_file);
+
+    if (data)
+        data->cb("IBB close sent, file transmission successful.");
+}
+
+int ibb_close_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const userdata)
+{
+    xmpp_ctx_t *ctx;
+    xmpp_stanza_t *st_iq, *st_close;
+    my_data *data;
+    FILE *fp;
+    unsigned char *decoded;
+
+    st_close = xmpp_stanza_get_child_by_name(st, "close");
+    if (st_close)
+    {
+        ctx = xmpp_conn_get_context(conn);
+        data = (my_data *)userdata;
+        data->cb("IBB close received, decoding and saving file...");
+
+        size_t file_len;
+        xmpp_base64_decode_bin(ctx, encoded_file, strlen(encoded_file), &decoded, &file_len);
+
+        if ((fp = fopen(cur_filename, "w")) != NULL)
+        {
+            if (fwrite(decoded, 1, file_len, fp) < file_len)
+            {
+                data->cb("error writing to file.");
+                fclose(fp);
+                xmpp_free(ctx, encoded_file);
+                return 1;
+            }
+        }
+
+        fclose(fp);
+        xmpp_free(ctx, decoded);
+        xmpp_free(ctx, encoded_file);
+
+        data->cb("File saved!");
+
+        return 0;
+    }
 
     return 1;
 }

@@ -59,7 +59,7 @@ char *pres_arr[100] = {};
 unsigned char msg_count = 0;
 
 // file transfer
-unsigned char fmsg_count = 0;
+unsigned char fmsg_count = 2;
 
 int main(int argc, char *argv[])
 {
@@ -395,14 +395,11 @@ int main(int argc, char *argv[])
                 {
                     if (tokens[1] != NULL && tokens[2] != NULL)
                     {
-                        // update_win(w_content, "SENDING IMAGE", "\tplease wait...");
-                        // xmpp_client_send_img(
-                        //     tokens[2],
-                        //     tokens[1],
-                        //     on_image_sent_result);
-
+                        fmsg_count = 2;
+                        wclear(w_content);
+                        mvwprintw(w_content, 1, 2, "[FILE TRANSFER]");
+                        wrefresh(w_content);
                         xmpp_client_offer_file(tokens[1], tokens[2], on_file_offer_result);
-                        // xmpp_client_offer_streamhost(tokens[2], on_streamhost_offer_sent);
                     }
                 }
             }
@@ -699,12 +696,16 @@ void on_img_recv(const char *result)
 
 void on_file_offer_result(const char *result)
 {
-    update_win(w_content, "FILE OFFER SENT", result);
+    fmsg_count++;
+    mvwprintw(w_content, fmsg_count, 2, result);
+    wrefresh(w_content);
 }
 
 void on_file_offer_recv(const char *result)
 {
-    update_win(w_content, "FILE OFFER RECEIVED", result);
+    fmsg_count++;
+    mvwprintw(w_content, fmsg_count, 2, result);
+    wrefresh(w_content);
 }
 
 void on_streamhost_offer_sent(const char *result)
@@ -719,7 +720,9 @@ void on_streamhost_offer_received(const char *result)
 
 void on_ibb_offer_recv(const char *result)
 {
-    update_win(w_content, "IBB OFFER RECEIVED", result);
+    fmsg_count++;
+    mvwprintw(w_content, fmsg_count, 2, result);
+    wrefresh(w_content);
 }
 
 void print_title(WINDOW *win, int row, int col)
