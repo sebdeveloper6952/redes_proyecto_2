@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "xmpp_account.h"
 #include "xmpp_utils.h"
+#include "xmpp_register.h"
 
 int delete_account_handler(
     xmpp_conn_t *const conn,
@@ -14,7 +15,6 @@ int delete_account_handler(
     ctx = xmpp_conn_get_context(conn);
     data = (my_data *)userdata;
 
-    // fprintf(stderr, "DEBUG: account was deleted from server.\n");
     if (data && data->cb)
         data->cb("ACCOUNT DELETED.");
 

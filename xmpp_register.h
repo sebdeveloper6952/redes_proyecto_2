@@ -1,6 +1,10 @@
 #include <strophe.h>
 #include "xmpp_utils.h"
 
+#ifndef XMPP_REGISTER
+#define XMPP_NS_REGISTER "jabber:iq:register"
+#endif
+
 xmpp_reg_t *reg_new(void);
 void xmpp_register();
 void send_register_form(xmpp_conn_t *conn, xmpp_stanza_t *stanza);
