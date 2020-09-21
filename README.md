@@ -2,9 +2,10 @@
 ## Cliente de Chat con XMPP
 - Sebastián Arriola 11463
 
-## Instalación en Ubuntu
-1. Se utilizó la librería libstrophe para la interacción de bajo nivel con el protocolo XMPP. Para instalar dicha librería en ubuntu, ejecutar `sudo apt update -y && sudo apt install -y libstrophe-dev`.
-2. Debe contar con `make` y `gcc` instalados.
+## Dependencias y Instalación en Ubuntu
+1. Se utilizó la librería libstrophe para la interacción de bajo nivel con el protocolo XMPP. La interfaz en línea de comando se realizó con ncurses.
+2. Para instalar las dependencias del proyecto, ejecutar: `sudo apt update -y && sudo apt install -y libstrophe-dev libncurses5-dev libncursesw5-dev`
+3. Debe contar con `make` y `gcc` instalados.
 
 ## Compilación
 - ejecutar `make` en el directorio del proyecto.
@@ -17,7 +18,7 @@
 - La interfaz es en línea de comando, y se utiliza el programa a base de comandos. Los comandos tienen la forma: `/command`, a continuación se detallan todos los comandos y su explicación.
 
 ## Comandos
-Notación utilizada `<option>` denota un argumento obligatorio, `[option]` denota un argumento opcional. **Todos los Jabber IDs utilizados en los comandos deben especificarse sin la parte del host.**
+Notación utilizada: `<option>` denota un argumento obligatorio, `[option]` denota un argumento opcional. **Todos los Jabber IDs utilizados en los comandos deben especificarse sin la parte del host (Excepto en el comando `/file`.**
 * `/help`
   - uso: `/help <command>`
   - descripción: muestra detalles sobre el comando especificado.
