@@ -2,9 +2,15 @@
 ## Cliente de Chat con XMPP
 - Sebastián Arriola 11463
 
+## Utilizar Proyecto con Docker (Recomendado)
+1. Se puede utilizar el proyecto fácilmente con Docker y sin instalar dependencias en su computadora, más que Docker (versión probada fue 19.03.12).
+2. En el directorio del proyecto ejecutar `docker build --tag xmpp_chat .` para crear la imagen que contiene todas las dependencias necesarias.
+3. Para utilizar el cliente de chat, ejecutar `docker run -it xmpp_chat`, lo cual corre el contenedor del proyecto.
+4. Cuando se haya terminado de usar el chat y si se desea remover las imagenes creadas anteriormente, ejecutar `docker rmi xmpp_chat ubuntu:bionic`
+
 ## Dependencias y Instalación en Ubuntu
 1. Se utilizó la librería libstrophe para la interacción de bajo nivel con el protocolo XMPP. La interfaz en línea de comando se realizó con ncurses.
-2. Para instalar las dependencias del proyecto, ejecutar: `sudo apt update -y && sudo apt install -y libstrophe-dev libncurses5-dev libncursesw5-dev`
+2. Para instalar las dependencias del proyecto, ejecutar: `sudo apt update -y && sudo apt install -y build-essential pkg-config libssl-dev libexpat-dev libstrophe-dev libncurses5-dev libncursesw5-dev`
 3. Debe contar con `make` y `gcc` instalados.
 
 ## Compilación
@@ -53,7 +59,7 @@ Notación utilizada: `<option>` denota un argumento obligatorio, `[option]` deno
   - ejemplo: `/vcard sebdev`
 * `/file`
   - uso: `/file <path> <jid>`
-  - descripción: Envía el archivo identificado por `<path>` al usuario identificado por su Jabber ID `<jid>`. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
+  - descripción: Envía el archivo identificado por `<path>` al usuario identificado por su Jabber ID `<jid>`. **El Jabber ID debe especificarse completo. Se recomienda ejecutar el comando `/active` para ver el Jabber ID completo de un usuario, y luego enviar el archivo utilizando ese Jabber ID.**
   - ejemplo: `/file test.png sebdev`
 * `/menu`
   - uso: `/menu`
