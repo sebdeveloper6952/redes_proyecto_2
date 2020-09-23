@@ -18,7 +18,6 @@ void xmpp_client_delete_account(void(*on_result));
 void xmpp_client_add_subscription_handler(void(*on_result));
 void xmpp_client_add_img_recv_handler(void(*on_result));
 void xmpp_client_send_img(const char *jid_to, const char *path, void(*on_result));
-
 void xmpp_client_offer_file(const char *path, const char *jid_to, void(*on_result));
 void xmpp_client_add_file_offer_handler(void(*on_result));
 void xmpp_client_add_file_offer_recv_handler(void(*on_result));

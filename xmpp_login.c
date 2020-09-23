@@ -235,11 +235,6 @@ void xmpp_client_offer_file(const char *path, const char *jid_to, void(*on_resul
     my_data *data = new_data();
     data->cb = on_result;
 
-    // char full_jid[256] = {};
-    // strcat(full_jid, jid_to);
-    // strcat(full_jid, "@");
-    // strcat(full_jid, _host);
-
     offer_file(conn, jid_to, path, data);
 }
 
@@ -261,12 +256,6 @@ void xmpp_client_offer_streamhost(const char *jid_to, void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
-
-    // char full_jid[256] = {};
-    // strcat(full_jid, jid_to);
-    // strcat(full_jid, "@");
-    // strcat(full_jid, _host);
-
     offer_streamhost(conn, jid_to, data);
 }
 

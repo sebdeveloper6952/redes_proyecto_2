@@ -615,6 +615,11 @@ void on_presence(const char *jid, const char *status)
     strcat(new_p, status);
     strcat(new_p, ")");
     pres_arr[p_count++] = new_p;
+
+    wclear(w_content);
+    mvwprintw(w_content, 1, 2, "[NOTIFICATION]: <presence> from [%s] %s", jid, status);
+    wborder(w_content, '|', '|', '-', '-', '*', '*', '*', '*');
+    wrefresh(w_content);
 }
 
 void show_saved_presences(void)
