@@ -5,9 +5,9 @@
 
 ## Project Description
 - The project is a XMPP Chat Client which connects to a server provided by the university course.
-- The Chat Client is used through the command line interface, by writing commands (see the Commands section).
+- The Chat Client is used through the command line interface by writing commands (see the Commands section).
 
-## Implemented Funcionalities
+## Implemented Functionalities
 - :heavy_check_mark: Register account on the server.
 - :heavy_check_mark: Delete account from the server.
 - :heavy_check_mark: Login / logout from the server.
@@ -15,7 +15,7 @@
 - :heavy_check_mark: Show your contacts (roster).
 - :heavy_check_mark: Show user / contact details (vCard).
 - :heavy_check_mark: 1 to 1 communication with any user or contact (private messaging).
-- :heavy_check_mark: Participate in group chats.
+- :heavy_check_mark: Participate in group chats (group messaging).
 - :heavy_check_mark: Define your presence message and status.
 - :heavy_check_mark: Send / receive notifications (when a contact changes its presence and when a message is received).
 - :heavy_check_mark: Send / receive files.
@@ -71,8 +71,8 @@ The syntax of the commands is: `/command <argument> [options]` where `<argument>
   - example: `/vcard sebdev_gajim` (use the jid `sebdev_gajim` to see a correctly working vCard).
 * `/file`
   - usage: `/file <filename> <jid>`
-  - description: sends the file identified by `filename` to the user identified by `jid`. The Jabber ID **MUST** be specified without the host part (see example). **NOTE: for simplicity, only files that are in the current directory can be sent.**
-  - example: `/file test.png sebdev` (`test.png` is a file included in this repo for testing purposes).
+  - description: sends the file identified by `filename` to the user identified by `jid`. The Jabber ID **MUST** be **FULLY** specified. It is recommended to first run the `/active` command to get a user's full Jabber ID. **NOTE: for simplicity, only files that are in the current directory can be sent.**
+  - example: `/file test.png sebdev@redes2020.xyz/31gr16q3bc`. (`test.png` is a file included in this repo for testing purposes).
 * `/menu`
   - usage: `/menu`
   - description: when on a private or group chat, this command exits the chat, otherwise it clears the screen.
