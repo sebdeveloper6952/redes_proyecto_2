@@ -41,7 +41,6 @@ void xmpp_login_conn_cb(xmpp_conn_t *const conn,
     }
     else if (status == XMPP_CONN_DISCONNECT)
     {
-        // fprintf(stderr, "DEBUG: connection disconnect event.\n");
     }
     else
     {

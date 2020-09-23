@@ -545,7 +545,6 @@ void on_login()
     xmpp_client_add_priv_msg_handler(on_msg);
     xmpp_client_add_gm_msg_handler(on_msg);
     xmpp_client_add_vcard_handler(on_vcard_result);
-    // xmpp_client_add_img_recv_handler(on_img_recv);
     xmpp_client_add_file_offer_handler(on_file_offer_result);
     xmpp_client_add_file_offer_recv_handler(on_file_offer_recv);
     xmpp_client_add_streamhost_offer_handler(on_streamhost_offer_received);

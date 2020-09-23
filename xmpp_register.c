@@ -62,7 +62,6 @@ void send_register_form(
 
     if (xmpp_stanza_get_children(query) == NULL)
     {
-        fprintf(stderr, "DEBUG: register form empty, not sending.\n");
         xmpp_disconnect(conn);
     }
     else
@@ -87,19 +86,16 @@ int xmpp_register_form_cb(xmpp_conn_t *const conn,
     type = xmpp_stanza_get_type(stanza);
     if (!type || strcmp(type, "error") == 0)
     {
-        // fprintf(stderr, "DEBUG: error during registration.\n");
         xmpp_disconnect(conn);
         return 0;
     }
 
     if (strcmp(type, XMPP_TYPE_RESULT) != 0)
     {
-        // fprintf(stderr, "DEBUG: expected type 'result' but got: %s\n", type);
         xmpp_disconnect(conn);
         return 0;
     }
 
-    // fprintf(stderr, "DEBUG: registration was succesful!\n");
     if (data && data->cb)
         data->cb("REGISTRATION SUCCESSFUL, YOU CAN NOW LOGIN WITH YOUR NEW ACCOUNT.");
     xmpp_disconnect(conn);
@@ -152,7 +148,6 @@ int xmpp_register_cb(xmpp_conn_t *const conn,
     // check for error
     if (!type || strcmp(type, "error") == 0)
     {
-        // fprintf(stderr, "DEBUG: error during registration.\n");
         xmpp_disconnect(conn);
         return 0;
     }
@@ -160,7 +155,6 @@ int xmpp_register_cb(xmpp_conn_t *const conn,
     // if we get type different to result, show error
     if (strcmp(type, XMPP_TYPE_RESULT) != 0)
     {
-        // fprintf(stderr, "DEBUG: expected result but got (%s).\n", type);
         xmpp_disconnect(conn);
         return 0;
     }
@@ -171,7 +165,6 @@ int xmpp_register_cb(xmpp_conn_t *const conn,
         registered = xmpp_stanza_get_child_by_name(query, "registered");
     if (registered != NULL)
     {
-        // fprintf(stderr, "DEBUG: account is already registered!\n");
         xmpp_disconnect(conn);
         return 0;
     }
@@ -202,13 +195,9 @@ int xmpp_features_cb(xmpp_conn_t *const conn,
     child = xmpp_stanza_get_child_by_name(stanza, "register");
     if (child && strcmp(xmpp_stanza_get_ns(child), XMPP_NS_REGISTER) == 0)
     {
-        // fprintf(stderr, "DEBUG: server does not support registration.\n");
         xmpp_disconnect(conn);
         return 0;
     }
-
-    // server supports registration
-    // fprintf(stderr, "DEBUG server supports registration.\n");
 
     // register callback
     xmpp_handler_add(conn, xmpp_register_cb, XMPP_NS_REGISTER, XMPP_ST_IQ, NULL, reg_info);
@@ -246,7 +235,6 @@ void xmpp_conn_cb(xmpp_conn_t *const conn,
 
     if (status == XMPP_CONN_RAW_CONNECT)
     {
-        // fprintf(stderr, "DEBUG: raw connection established.\n");
         xmpp_conn_open_stream_default(conn);
     }
     else if (status == XMPP_CONN_CONNECT)
@@ -270,7 +258,6 @@ void xmpp_conn_cb(xmpp_conn_t *const conn,
     }
     else
     {
-        // fprintf(stderr, "DEBUG: disconnected from server.\n");
         xmpp_stop(ctx);
     }
 
@@ -291,13 +278,13 @@ void xmpp_register()
     ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
 
-    // // register details
+    // register details
     xmpp_conn_set_jid(conn, "redes2020.xyz");
     register_info = reg_new();
     register_info->ctx = ctx;
     register_info->jid = "redes2020.xyz";
 
-    // // connect to server
+    // connect to server
     xmpp_connect_raw(conn, NULL, 0, xmpp_conn_cb, register_info);
     xmpp_run(ctx);
 
@@ -330,13 +317,13 @@ void xmpp_client_register_account(
     ctx = xmpp_ctx_new(NULL, NULL);
     conn = xmpp_conn_new(ctx);
 
-    // // register details
+    // register details
     xmpp_conn_set_jid(conn, "redes2020.xyz");
 
     data = new_data();
     data->cb = on_result;
 
-    // // connect to server
+    // connect to server
     xmpp_connect_raw(conn, NULL, 0, xmpp_conn_cb, data);
     xmpp_run(ctx);
 

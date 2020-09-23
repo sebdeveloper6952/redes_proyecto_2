@@ -19,6 +19,19 @@
 ## Ejecución
 - ejecutar `./ncurses_client` en el directorio del proyecto.
 
+## Funcionalidades Implementadas
+- :white_check_mark: Registrar cuenta en servidor.
+- [x] Eliminar cuenta en servidor.
+- [x] Iniciar / cerrar sesión.
+- [x] Mostrar todos los usuarios (se consultan todos pero solo se muestran 32)
+- [x] Mostrar contactos (roster)
+- [x] Mostrar detalles de contacto de un usuario (vCard)
+- [x] Comunicación 1 a 1 con cualquier usuario / contacto.
+- [x] Participar en conversaciones grupales.
+- [x] Definir mensaje de presencia.
+- [x] Enviar / Recibir Notificaciones
+- [x] Enviar / Recibir Archivos
+
 ## Descripción de Proyecto
 - Se realizó un cliente de chat utilizando el protocolo XMPP, que se conecta al servidor del curso.
 - La interfaz es en línea de comando, y se utiliza el programa a base de comandos. Los comandos tienen la forma: `/command`, a continuación se detallan todos los comandos y su explicación.

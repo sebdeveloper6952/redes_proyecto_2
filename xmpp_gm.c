@@ -15,16 +15,6 @@ int gm_msg_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *const
     st_body = xmpp_stanza_get_child_by_name(st, "body");
     from = xmpp_stanza_get_attribute(st, "from");
 
-    // strcat(msg, "\n\n******* GROUP MSG *******\n");
-    // strcat(msg, "* FROM: ");
-    // strcat(msg, from);
-    // strcat(msg, "\n");
-    // strcat(msg, "* BODY: ");
-    // if (body)
-    //     strcat(msg, xmpp_stanza_get_text(body));
-    // strcat(msg, "\n***************************\n");
-    // fprintf(stderr, "%s\n", msg);
-
     if (st_body)
         c_body = xmpp_stanza_get_text(st_body);
     if (data->msg_cb != NULL)

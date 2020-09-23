@@ -77,7 +77,6 @@ int file_transfer_init_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st,
     tstream_id = xmpp_stanza_get_attribute(si, "id");
     if (!tstream_id)
     {
-        // fprintf(stderr, "DEBUG: file transfer, stream id not found.\n");
         return 1;
     }
     strcpy(stream_id, tstream_id);
@@ -85,7 +84,6 @@ int file_transfer_init_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st,
     file = xmpp_stanza_get_child_by_name(si, "file");
     if (!file)
     {
-        // fprintf(stderr, "DEBUG: file transfer, <file> not found.\n");
         return 1;
     }
 
@@ -365,7 +363,6 @@ void offer_file(xmpp_conn_t *const conn, const char *jid, const char *path, void
     xmpp_stanza_set_name(value, "value");
 
     temp = xmpp_stanza_new(ctx);
-    // xmpp_stanza_set_text(temp, "http://jabber.org/protocol/bytestreams");
     xmpp_stanza_set_text(temp, "http:/jabber.org/protocol/ibb");
 
     xmpp_stanza_add_child(value, temp);
