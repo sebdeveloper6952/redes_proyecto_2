@@ -1,88 +1,87 @@
 # UVG | Redes - Proyecto 2
-## Cliente de Chat con XMPP
-- Sebastián Arriola 11463
 
-## Utilizar Proyecto con Docker (Recomendado)
-1. Se puede utilizar el proyecto fácilmente con Docker y sin instalar dependencias en su computadora, más que Docker (versión probada fue 19.03.12).
-2. En el directorio del proyecto ejecutar `docker build --tag xmpp_chat .` para crear la imagen que contiene todas las dependencias necesarias.
-3. Para utilizar el cliente de chat, ejecutar `docker run -it xmpp_chat`, lo cual corre el contenedor del proyecto.
-4. Cuando se haya terminado de usar el chat y si se desea remover las imagenes creadas anteriormente, ejecutar `docker rmi xmpp_chat ubuntu:bionic`
+## XMPP chat client.
+- Made by: Sebastian Arriola (11463)
 
-## Utilizar Proyecto en Ubuntu
-1. Se utilizó la librería libstrophe para la interacción de bajo nivel con el protocolo XMPP. La interfaz en línea de comando se realizó con ncurses.
-2. Para instalar las dependencias del proyecto, ejecutar: `sudo apt update -y && sudo apt install -y build-essential pkg-config libssl-dev libexpat-dev libstrophe-dev libncurses5-dev libncursesw5-dev`
-3. Debe contar con `make` y `gcc` instalados.
+## Project Description
+- The project is a XMPP Chat Client which connects to a server provided by the university course.
+- The Chat Client is used through the command line interface, by writing commands (see the Commands section).
 
-## Compilación
-- ejecutar `make` en el directorio del proyecto.
+## Implemented Funcionalities
+- :heavy_check_mark: Register account on the server.
+- :heavy_check_mark: Delete account from the server.
+- :heavy_check_mark: Login / logout from the server.
+- :heavy_check_mark: Show all users registered on the server (Shows only the first 32 results).
+- :heavy_check_mark: Show your contacts (roster).
+- :heavy_check_mark: Show user / contact details (vCard).
+- :heavy_check_mark: 1 to 1 communication with any user or contact (private messaging).
+- :heavy_check_mark: Participate in group chats.
+- :heavy_check_mark: Define your presence message and status.
+- :heavy_check_mark: Send / receive notifications (when a contact changes its presence and when a message is received).
+- :heavy_check_mark: Send / receive files.
 
-## Ejecución
-- ejecutar `./ncurses_client` en el directorio del proyecto.
+## Installation
+### With Docker (Recommended)
+- Install docker on your machine (Docker version used was 19.03.12)
+- Clone the project directory into your machine.
+- Inside the project directory, run `docker build --tag xmpp_chat .`, which creates the project image with all the project dependencies.
+- To use the XMPP Chat, run `docker run -it xmpp_chat`, which runs the project container.
+- When you are finished using the XMPP Chat and if you want to erase everything used by Docker, run `docker rmi xmpp_chat ubuntu:bionic`
 
-## Funcionalidades Implementadas
-- :heavy_check_mark: Registrar cuenta en servidor
-- :heavy_check_mark: Eliminar cuenta en servidor
-- :heavy_check_mark: Iniciar / cerrar sesión
-- :heavy_check_mark: Mostrar todos los usuarios (se consultan todos pero solo se muestran 32)
-- :heavy_check_mark: Mostrar contactos (roster)
-- :heavy_check_mark: Mostrar detalles de contacto de un usuario (vCard)
-- :heavy_check_mark: Comunicación 1 a 1 con cualquier usuario / contacto
-- :heavy_check_mark: Participar en conversaciones grupales
-- :heavy_check_mark: Definir mensaje de presencia
-- :heavy_check_mark: Enviar / Recibir Notificaciones
-- :heavy_check_mark: Enviar / Recibir Archivos
+### With Ubuntu
+- The library used to interact with the XMPP protocol was libstrophe. Libstrophe uses the expat XML Parser. The terminal client was built using the ncurses library.
+- You have to install all the dependencies on your host machine. Run `sudo apt update -y && sudo apt install -y build-essential pkg-config libssl-dev libexpat-dev libstrophe-dev libncurses5-dev libncursesw5-dev`
+- Clone the project directory into your machine.
+- Inside the project directory, run `make`
+- To run the XMPP Chat Client, run `./ncurses_client`
 
-## Descripción de Proyecto
-- Se realizó un cliente de chat utilizando el protocolo XMPP, que se conecta al servidor del curso.
-- La interfaz es en línea de comando, y se utiliza el programa a base de comandos. Los comandos tienen la forma: `/command`, a continuación se detallan todos los comandos y su explicación.
-
-## Comandos
-Notación utilizada: `<option>` denota un argumento obligatorio, `[option]` denota un argumento opcional. **Todos los Jabber IDs utilizados en los comandos deben especificarse sin la parte del host (Excepto en el comando `/file`.**
+## Commands
+The syntax of the commands is: `/command <argument> [options]` where `<argument>` denotes an argument that **MUST** be specified and `[options]` are **OPTIONAL**. **IMPORTANT NOTE: all Jabber IDS MUST be specified without the host part (see examples of each command) EXCEPT when using the `/file` command.**
 * `/help`
-  - uso: `/help <command>`
-  - descripción: muestra detalles sobre el comando especificado.
-  - ejemplo: `/help users`
+  - usage: `/help <command>`
+  - description: shows usage details of the specified command.
+  - example: `/help users`
 * `/users`
-  - uso: `/users`
-  - descripción: muestra hasta 32 de los usuarios registrados en el servidor.
-  - ejemplo: `/users`
+  - usage: `/users`
+  - description: shows up to 32 of the users that are registered on the server.
+  - example: `/users`
 * `/roster`
-  - uso: `/roster [add <jid>]`
-  - descripción: cuando se utiliza `/roster`, se muestran los contactos del usuario. Cuando se utiliza `/roster add <jid>`, se envía una suscripción al usuario identificado con Jabber ID `<jid>`. Esto funciona como una petición de amistad. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo: `/roster add sebdev`
+  - usage: `/roster [add <jid>]`
+  - description: when no options are specified, like `/roster`, it shows the user's contacts (its roster). When used with options, like `/roster add <jid>`, it sends a friend request (subscription) to the user identified by `jid`. The Jabber ID **must** be specified without the host part (see example).
+  - example: `/roster add sebdev`
 * `/active`
-  - uso: `/active`
-  - descripción: muestra todos los estados que se han recibido de los contactos del usuario. Cuando un contacto del usuario inicia sesión, envía un stanza de presencia al servidor, y el servidor lo reenvía a todos los contados de dicho usuario. Esa stanza de presencia es la que se muestra en este comando.
-  - ejemplo: `/active`
+  - usage: `/active`
+  - description: shows all presence messages that have been received. This shows all the presence changes that the user's contacts have made. In essence, it shows which users are active on the server.
+  - example: `/active`
 * `/presence`
-  - uso: `/presence <show> [status]`
-  - descripción: cambia el estado actual del usuario. `<show>` debe ser uno de los siguientes valores: `available`, `away`, `xa`, `dnd`, `invisible`. `<status>` es opcional y es una cadena de caracteres que se muestra como el estado del usuario.
-  - ejemplo: `/presence away en clases`
+  - usage: `/presence <show> [status]`
+  - description: changes the user's current status and presence message. `<show>` **MUST** be one of the following: `available, away, xa, dnd, invisible` `[status]` is optional and it is a string of characters.
+  - example: `/presence away sleeping...`
 * `/priv`
-  - uso: `/priv <jid>`
-  - descripción: inicia un chat privado con el usuario identificado con Jabber ID `<jid>`. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo: `/priv sebdev`
+  - usage: `/priv <jid>`
+  - description: starts a private chat with the user identified by `jid`. The Jabber ID **MUST** be specified without the host part (see example). To send a message, simply type in your message and press ENTER/RETURN.
+  - example: `/priv sebdev`
 * `/group`
-  - uso: `/group <room_jid> <nick>`
-  - descripción: se une al grupo con Jabber ID `<jid>`. Si el grupo no existe y el servidor está configurado correctamente, el grupo es creado. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo. `<nick>` es el apodo que el usuario desea tener dentro del grupo.
-  - ejemplo: `/group mi_grupo_favorito juan`
+  - usage: `/group <room_jid> <nick>`
+  - description: joins the group chat identified by `room_jid`. If the group does not exist and the server is configured correctly, the group is created. The group Jabber ID **MUST** be specified without the host part (see example). `nick` is the nickname that the user chooses to use inside the group.
+  - example: `/group linux_lovers tux`
 * `/vcard`
-  - uso: `/vcard <jid>`
-  - descripción: muestra la vCard del usuario identificado por Jabber ID `<jid>`. El Jabber ID **debe** especificarse sin la parte del host, ver ejemplo.
-  - ejemplo: `/vcard sebdev`
+  - usage: `/vcard <jid>`
+  - description: shows the vCard of the user identified by `jid`. The Jabber ID **MUST** be specified without the host part (see example).
+  - example: `/vcard sebdev_gajim` (use the jid `sebdev_gajim` to see a correctly working vCard).
 * `/file`
-  - uso: `/file <path> <jid>`
-  - descripción: Envía el archivo identificado por `<path>` al usuario identificado por su Jabber ID `<jid>`. **El Jabber ID debe especificarse completo. Se recomienda ejecutar el comando `/active` para ver el Jabber ID completo de un usuario, y luego enviar el archivo utilizando ese Jabber ID.**
-  - ejemplo: `/file test.png sebdev`
+  - usage: `/file <filename> <jid>`
+  - description: sends the file identified by `filename` to the user identified by `jid`. The Jabber ID **MUST** be specified without the host part (see example). **NOTE: for simplicity, only files that are in the current directory can be sent.**
+  - example: `/file test.png sebdev` (`test.png` is a file included in this repo for testing purposes).
 * `/menu`
-  - uso: `/menu`
-  - descripción: limpia la pantalla. Si se está dentro de un chat privado o grupal, se sale del chat.
-  - ejemplo: `/menu`
+  - usage: `/menu`
+  - description: when on a private or group chat, this command exits the chat, otherwise it clears the screen.
+  - example: `/menu`
 * `/delete`
-  - uso: `/delete`
-  - descripción: elimina la cuenta del usuario del servidor.
-  - ejemplo `/delete`
+  - usage: `/delete`
+  - description: deletes your account from the server.
+  - example `/delete`
 * `/quit`
-  - uso: `/quit`
-  - descripción: sale del programa :(
-  - ejemplo: `/quit`
+  - usage: `/quit`
+  - description: exit the program :cry:
+  - example: `/quit`
