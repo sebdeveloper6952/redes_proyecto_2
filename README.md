@@ -8,7 +8,7 @@
 3. Para utilizar el cliente de chat, ejecutar `docker run -it xmpp_chat`, lo cual corre el contenedor del proyecto.
 4. Cuando se haya terminado de usar el chat y si se desea remover las imagenes creadas anteriormente, ejecutar `docker rmi xmpp_chat ubuntu:bionic`
 
-## Dependencias y Instalación en Ubuntu
+## Utilizar Proyecto en Ubuntu
 1. Se utilizó la librería libstrophe para la interacción de bajo nivel con el protocolo XMPP. La interfaz en línea de comando se realizó con ncurses.
 2. Para instalar las dependencias del proyecto, ejecutar: `sudo apt update -y && sudo apt install -y build-essential pkg-config libssl-dev libexpat-dev libstrophe-dev libncurses5-dev libncursesw5-dev`
 3. Debe contar con `make` y `gcc` instalados.
