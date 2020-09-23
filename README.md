@@ -20,17 +20,17 @@
 - ejecutar `./ncurses_client` en el directorio del proyecto.
 
 ## Funcionalidades Implementadas
-- :white_check_mark: Registrar cuenta en servidor.
-- [x] Eliminar cuenta en servidor.
-- [x] Iniciar / cerrar sesión.
-- [x] Mostrar todos los usuarios (se consultan todos pero solo se muestran 32)
-- [x] Mostrar contactos (roster)
-- [x] Mostrar detalles de contacto de un usuario (vCard)
-- [x] Comunicación 1 a 1 con cualquier usuario / contacto.
-- [x] Participar en conversaciones grupales.
-- [x] Definir mensaje de presencia.
-- [x] Enviar / Recibir Notificaciones
-- [x] Enviar / Recibir Archivos
+- Registrar cuenta en servidor :heavy_check_mark:
+- Eliminar cuenta en servidor :heavy_check_mark:
+- Iniciar / cerrar sesión :heavy_check_mark:
+- Mostrar todos los usuarios (se consultan todos pero solo se muestran 32) :heavy_check_mark:
+- Mostrar contactos (roster)
+- Mostrar detalles de contacto de un usuario (vCard) :heavy_check_mark:
+- Comunicación 1 a 1 con cualquier usuario / contacto :heavy_check_mark:
+- Participar en conversaciones grupales :heavy_check_mark:
+- Definir mensaje de presencia :heavy_check_mark:
+- Enviar / Recibir Notificaciones :heavy_check_mark:
+- Enviar / Recibir Archivos :heavy_check_mark:
 
 ## Descripción de Proyecto
 - Se realizó un cliente de chat utilizando el protocolo XMPP, que se conecta al servidor del curso.
