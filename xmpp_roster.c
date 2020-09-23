@@ -46,7 +46,7 @@ void get_roster(xmpp_conn_t *const conn)
     // send iq
     xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     xmpp_stanza_t *iq, *query;
-    iq = xmpp_iq_new(ctx, "get", XMPP_ID_GET_ROSTER);
+    iq = xmpp_iq_new(ctx, XMPP_TYPE_GET, XMPP_ID_GET_ROSTER);
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(query, "query");
     xmpp_stanza_set_ns(query, XMPP_NS_ROSTER);

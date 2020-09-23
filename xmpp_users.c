@@ -95,7 +95,7 @@ void search_discovery(xmpp_conn_t *const conn)
 {
     xmpp_ctx_t *ctx = xmpp_conn_get_context(conn);
     xmpp_stanza_t *iq, *query;
-    iq = xmpp_iq_new(ctx, "get", "search_discovery");
+    iq = xmpp_iq_new(ctx, XMPP_TYPE_GET, "search_discovery");
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(iq, "search.redes2020.xyz");

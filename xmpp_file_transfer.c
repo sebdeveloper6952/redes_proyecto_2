@@ -328,29 +328,29 @@ void offer_file(xmpp_conn_t *const conn, const char *jid, const char *path, void
     fclose(fp);
 
     xmpp_stanza_t *iq, *si, *file, *feature, *x, *field, *option, *value, *text, *temp;
-    iq = xmpp_iq_new(ctx, "set", "npq71g53");
+    iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "npq71g53");
     xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(iq, jid);
 
     si = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(si, "si");
     xmpp_stanza_set_id(si, "vxf9n471bn46");
-    xmpp_stanza_set_attribute(si, "profile", "http://jabber.org/protocol/si/profile/file-transfer");
-    xmpp_stanza_set_ns(si, "http://jabber.org/protocol/si");
+    xmpp_stanza_set_attribute(si, "profile", XMPP_NS_FILE_TRANSFER);
+    xmpp_stanza_set_ns(si, XMPP_NS_PROT_SI);
 
     file = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(file, "file");
-    xmpp_stanza_set_ns(file, "http://jabber.org/protocol/si/profile/file-transfer");
+    xmpp_stanza_set_ns(file, XMPP_NS_FILE_TRANSFER);
     xmpp_stanza_set_attribute(file, "size", buf);
     xmpp_stanza_set_attribute(file, "name", path);
 
     feature = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(feature, "feature");
-    xmpp_stanza_set_ns(feature, "http://jabber.org/protocol/feature-neg");
+    xmpp_stanza_set_ns(feature, XMPP_NS_FEAT_NEG);
 
     x = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(x, "x");
-    xmpp_stanza_set_ns(x, "jabber:x:data");
+    xmpp_stanza_set_ns(x, XMPP_NS_X_DATA);
     xmpp_stanza_set_type(x, "form");
 
     field = xmpp_stanza_new(ctx);
@@ -400,11 +400,11 @@ int file_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *c
     st_si = xmpp_stanza_get_child_by_name(st, "si");
     if (st_si)
     {
-        if (strcmp(xmpp_stanza_get_type(st), "result") == 0)
+        if (strcmp(xmpp_stanza_get_type(st), XMPP_TYPE_RESULT) == 0)
         {
             // we offered the file
             data->cb("Offering IBB");
-            xmpp_handler_add(conn, ibb_offer_accepted_handler, NULL, "iq", "result", userdata);
+            xmpp_handler_add(conn, ibb_offer_accepted_handler, NULL, XMPP_ST_IQ, XMPP_TYPE_RESULT, userdata);
             xmpp_id_handler_add(conn, ibb_data_ack_handler, "data_chunk_ack", userdata);
             send_ibb_init(conn, xmpp_stanza_get_from(st), userdata);
         }
@@ -425,7 +425,7 @@ int file_offer_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void *c
             encoded_file = malloc(atol(t_filesize) * 2);
 
             // set handler for ibb close
-            xmpp_handler_add(conn, ibb_close_recv_handler, NULL, "iq", "set", userdata);
+            xmpp_handler_add(conn, ibb_close_recv_handler, NULL, XMPP_ST_IQ, XMPP_TYPE_SET, userdata);
 
             xmpp_send_raw_string(
                 conn,
@@ -463,13 +463,13 @@ void offer_streamhost(xmpp_conn_t *const conn, const char *jid_to, void *const u
 
     // stanza creation and sending
     ctx = xmpp_conn_get_context(conn);
-    iq = xmpp_iq_new(ctx, "set", "offer_streamhost");
+    iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "offer_streamhost");
     xmpp_stanza_set_from(iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(iq, jid_to);
 
     query = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(query, "query");
-    xmpp_stanza_set_ns(query, "http://jabber.org/protocol/bytestreams");
+    xmpp_stanza_set_ns(query, XMPP_NS_PROT_BYTESTREAMS);
     xmpp_stanza_set_attribute(query, "sid", "vxf9n471bn46");
 
     stream = xmpp_stanza_new(ctx);
@@ -559,13 +559,13 @@ void send_ibb_init(xmpp_conn_t *const conn, const char *jid_to, void *const user
     data = (my_data *)userdata;
 
     ctx = xmpp_conn_get_context(conn);
-    st_iq = xmpp_iq_new(ctx, "set", "kjsf4eyff");
+    st_iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "kjsf4eyff");
     xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(st_iq, jid_to);
 
     st_open = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(st_open, "open");
-    xmpp_stanza_set_ns(st_open, "http://jabber.org/protocol/ibb");
+    xmpp_stanza_set_ns(st_open, XMPP_NS_PROT_IBB);
     xmpp_stanza_set_attribute(st_open, "block-size", "4096");
     xmpp_stanza_set_attribute(st_open, "sid", "vxf9n471bn46");
     xmpp_stanza_set_attribute(st_open, "stanza", "iq");
@@ -589,7 +589,7 @@ int ibb_offer_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, voi
     if (st_open)
     {
         ctx = xmpp_conn_get_context(conn);
-        st_iq = xmpp_iq_new(ctx, "result", xmpp_stanza_get_id(st));
+        st_iq = xmpp_iq_new(ctx, XMPP_TYPE_RESULT, xmpp_stanza_get_id(st));
         xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
         xmpp_stanza_set_to(st_iq, xmpp_stanza_get_from(st));
 
@@ -674,13 +674,13 @@ void ibb_send_data_chunk(xmpp_conn_t *const conn, const char *jid, unsigned shor
 
     data = (my_data *)userdata;
     ctx = xmpp_conn_get_context(conn);
-    st_iq = xmpp_iq_new(ctx, "set", "data_chunk_sent");
+    st_iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "data_chunk_sent");
     xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(st_iq, jid);
 
     st_data = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(st_data, "data");
-    xmpp_stanza_set_ns(st_data, "http://jabber.org/protocol/ibb");
+    xmpp_stanza_set_ns(st_data, XMPP_NS_PROT_IBB);
     sprintf(b_chunk_no, "%d", chunk_no);
     xmpp_stanza_set_attribute(st_data, "seq", b_chunk_no);
     xmpp_stanza_set_attribute(st_data, "sid", "vxf9n471bn46");
@@ -743,7 +743,7 @@ int ibb_data_recv_handler(xmpp_conn_t *const conn, xmpp_stanza_t *const st, void
         xmpp_free(ctx, chunk);
 
         // send data ack
-        st_iq = xmpp_iq_new(ctx, "result", "data_chunk_ack");
+        st_iq = xmpp_iq_new(ctx, XMPP_TYPE_RESULT, "data_chunk_ack");
         xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
         xmpp_stanza_set_to(st_iq, xmpp_stanza_get_from(st));
         xmpp_send(conn, st_iq);
@@ -793,13 +793,13 @@ void send_ibb_close(xmpp_conn_t *const conn, const char *jid_to, void *const use
     data = (my_data *)userdata;
 
     ctx = xmpp_conn_get_context(conn);
-    st_iq = xmpp_iq_new(ctx, "set", "kjsf4eyff");
+    st_iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "kjsf4eyff");
     xmpp_stanza_set_from(st_iq, xmpp_conn_get_bound_jid(conn));
     xmpp_stanza_set_to(st_iq, jid_to);
 
     st_close = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(st_close, "close");
-    xmpp_stanza_set_ns(st_close, "http://jabber.org/protocol/ibb");
+    xmpp_stanza_set_ns(st_close, XMPP_NS_PROT_IBB);
     xmpp_stanza_set_attribute(st_close, "sid", "vxf9n471bn46");
 
     xmpp_stanza_add_child(st_iq, st_close);

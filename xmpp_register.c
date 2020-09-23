@@ -67,7 +67,7 @@ void send_register_form(
     }
     else
     {
-        iq = xmpp_iq_new(ctx, "set", "register_form_response");
+        iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "register_form_response");
         xmpp_stanza_add_child(iq, query);
         xmpp_send(conn, iq);
         xmpp_stanza_release(query);
@@ -92,7 +92,7 @@ int xmpp_register_form_cb(xmpp_conn_t *const conn,
         return 0;
     }
 
-    if (strcmp(type, "result") != 0)
+    if (strcmp(type, XMPP_TYPE_RESULT) != 0)
     {
         // fprintf(stderr, "DEBUG: expected type 'result' but got: %s\n", type);
         xmpp_disconnect(conn);
@@ -158,7 +158,7 @@ int xmpp_register_cb(xmpp_conn_t *const conn,
     }
 
     // if we get type different to result, show error
-    if (strcmp(type, "result") != 0)
+    if (strcmp(type, XMPP_TYPE_RESULT) != 0)
     {
         // fprintf(stderr, "DEBUG: expected result but got (%s).\n", type);
         xmpp_disconnect(conn);
@@ -211,11 +211,11 @@ int xmpp_features_cb(xmpp_conn_t *const conn,
     // fprintf(stderr, "DEBUG server supports registration.\n");
 
     // register callback
-    xmpp_handler_add(conn, xmpp_register_cb, XMPP_NS_REGISTER, "iq", NULL, reg_info);
+    xmpp_handler_add(conn, xmpp_register_cb, XMPP_NS_REGISTER, XMPP_ST_IQ, NULL, reg_info);
 
     // send the request for the register form
     domain = xmpp_jid_domain(ctx, reg_info->jid);
-    iq = xmpp_iq_new(ctx, "get", "register_form_request");
+    iq = xmpp_iq_new(ctx, XMPP_TYPE_GET, "register_form_request");
     xmpp_stanza_set_to(iq, domain);
     child = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(child, "query");
@@ -251,23 +251,13 @@ void xmpp_conn_cb(xmpp_conn_t *const conn,
     }
     else if (status == XMPP_CONN_CONNECT)
     {
-        // fprintf(stderr, "DEBUG: stream opened.\n");
-
-        // TODO: set error callback
-
-        // Features callback
-        // xmpp_handler_add(conn,
-        //                  xmpp_features_cb,
-        //                  XMPP_NS_STREAMS,
-        //                  "features",
-        //                  NULL, reg_info);
 
         // register result handler
         xmpp_handler_add(conn, xmpp_register_cb, XMPP_NS_REGISTER, "iq", NULL, data);
 
         // send the request for the register form
         domain = xmpp_jid_domain(ctx, "redes2020.xyz");
-        iq = xmpp_iq_new(ctx, "get", "register_form_request");
+        iq = xmpp_iq_new(ctx, XMPP_TYPE_GET, "register_form_request");
         xmpp_stanza_set_to(iq, domain);
         child = xmpp_stanza_new(ctx);
         xmpp_stanza_set_name(child, "query");

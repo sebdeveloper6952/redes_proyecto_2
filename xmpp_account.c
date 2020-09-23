@@ -35,7 +35,7 @@ void delete_account(xmpp_conn_t *const conn, void(*on_result))
     data->cb = on_result;
     xmpp_id_handler_add(conn, delete_account_handler, "delete_account", data);
 
-    iq = xmpp_iq_new(ctx, "set", "delete_account");
+    iq = xmpp_iq_new(ctx, XMPP_TYPE_SET, "delete_account");
     query = xmpp_stanza_new(ctx);
     remove = xmpp_stanza_new(ctx);
     xmpp_stanza_set_name(remove, "remove");

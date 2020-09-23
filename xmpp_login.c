@@ -220,7 +220,7 @@ void xmpp_client_add_img_recv_handler(void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
-    xmpp_handler_add(conn, xmpp_bob_img_recv_handler, NULL, "message", "normal", data);
+    xmpp_handler_add(conn, xmpp_bob_img_recv_handler, NULL, XMPP_ST_MESSAGE, XMPP_TYPE_NORMAL, data);
 }
 
 void xmpp_client_send_img(const char *jid_to, const char *path, void(*on_result))
@@ -242,14 +242,14 @@ void xmpp_client_add_file_offer_handler(void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
-    xmpp_handler_add(conn, file_offer_handler, NULL, "iq", "result", data);
+    xmpp_handler_add(conn, file_offer_handler, NULL, XMPP_ST_IQ, XMPP_TYPE_RESULT, data);
 }
 
 void xmpp_client_add_file_offer_recv_handler(void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
-    xmpp_handler_add(conn, file_offer_handler, NULL, "iq", "set", data);
+    xmpp_handler_add(conn, file_offer_handler, NULL, XMPP_ST_IQ, XMPP_TYPE_SET, data);
 }
 
 void xmpp_client_offer_streamhost(const char *jid_to, void(*on_result))
@@ -270,5 +270,5 @@ void xmpp_client_add_ibb_offer_recv_handler(void(*on_result))
 {
     my_data *data = new_data();
     data->cb = on_result;
-    xmpp_handler_add(conn, ibb_offer_recv_handler, NULL, "iq", "set", data);
+    xmpp_handler_add(conn, ibb_offer_recv_handler, NULL, XMPP_ST_IQ, XMPP_TYPE_SET, data);
 }
