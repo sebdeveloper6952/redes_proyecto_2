@@ -85,6 +85,18 @@ The syntax of the commands is: `/command <argument> [options]` where `<argument>
   - usage: `/quit`
   - description: exit the program :cry:
   - example: `/quit`
+  
+## How to Test File Send / Receive (Using Docker)
+- You will run 2 containers at the same time.
+- Run `docker run -v $PWD:/home/app xmpp_chat make` on the project folder to generate the project executable.
+- Run `cp ./ncurses_client another_folder` to copy the executable into another folder. By doing this you can effectively prove that the file is received at `another_folder`
+- Run one container at the project folder as: `docker run xmpp_chat`
+- Change directory to `another_folder` and run `docker run -it -v $PWD:/home/app xmpp_chat`
+- Login into both chat clients with different accounts, and on the first client (the one at the project directory) enter the command `/active` to find the full jabber id of the other client.
+- On the first client (the one at the project directory) enter the command `/file test.png full_jabber_id` to start the file transfer.
+- Output should show on both chat clients.
+- When you see `File saved!` at the second client, the file transfer has finished successfully.
+- Enter the command `/quit` at the second client, and list the directory contents with `ls -al` to verify that the file (`test.png`) was saved successfully.
 
 ## Useful Links
 - [Libstrophe](http://strophe.im/libstrophe/)
