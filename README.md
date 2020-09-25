@@ -85,3 +85,8 @@ The syntax of the commands is: `/command <argument> [options]` where `<argument>
   - usage: `/quit`
   - description: exit the program :cry:
   - example: `/quit`
+
+## Useful Links
+- [Libstrophe](http://strophe.im/libstrophe/)
+- [Ncurses](https://tldp.org/HOWTO/NCURSES-Programming-HOWTO/)
+- [XMPP Protocol](https://xmpp.org)
