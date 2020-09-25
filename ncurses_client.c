@@ -271,9 +271,8 @@ int main(int argc, char *argv[])
                         update_win(
                             w_content,
                             "FILE COMMAND HELP",
-                            "- usage: /file <file_path> <jid>\n"
-                            " - description: send file with full path <file_path> to user identified by bare jid <jid>."
-                            "\n\t Only works on small files ~10KB.");
+                            "- usage: /file <filename> <jid>\n"
+                            " - description: sends the file identified by <filename> to the user identified by <jid>. \n\tThe Jabber ID MUST be FULLY specified. \n\tIt is recommended to first run the /active command to get a user's full Jabber ID. \n\tNOTE: for simplicity, only files that are in the current directory can be sent.");
                     }
                     else if (strcmp(tokens[1], "menu") == 0)
                     {
